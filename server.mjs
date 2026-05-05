@@ -1,5 +1,6 @@
 import express from 'express';
 import { products } from './products.mjs';
+import { addReview, getProductReviews, getProductAverageRating } from './reviews.mjs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -24,6 +25,20 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
   res.send(renderPage('商品一覧', renderProductListing([])));
+});
+
+app.get('/product/:id', (req, res) => {
+  const productId = parseInt(req.params.id);
+  const product = products.find(p => p.id === productId);
+  
+  if (!product) {
+    return res.status(404).send(renderPage('エラー', '<h1>商品が見つかりません</h1>'));
+  }
+
+  const productReviews = getProductReviews(productId);
+  const avgRating = getProductAverageRating(productId);
+  const productDetailHTML = renderProductDetail(product, productReviews, avgRating);
+  res.send(renderPage(`${product.name} - 商品詳細`, productDetailHTML));
 });
 
 app.get('/api/products', (req, res) => {
@@ -80,6 +95,37 @@ app.post('/api/checkout', (req, res) => {
     success: true, 
     message: '注文が完了しました',
     orderId: `ORD-${Date.now()}`
+  });
+});
+
+app.get('/api/reviews/:productId', (req, res) => {
+  const productId = parseInt(req.params.productId);
+  const productReviews = getProductReviews(productId);
+  const avgRating = getProductAverageRating(productId);
+  res.json({
+    reviews: productReviews,
+    averageRating: avgRating,
+    totalReviews: productReviews.length
+  });
+});
+
+app.post('/api/reviews', (req, res) => {
+  const { productId, rating, comment } = req.body;
+  
+  if (!productId || !rating || !comment) {
+    return res.status(400).json({ error: '全ての項目を入力してください' });
+  }
+
+  const product = products.find(p => p.id === parseInt(productId));
+  if (!product) {
+    return res.status(404).json({ error: '商品が見つかりません' });
+  }
+
+  const review = addReview(productId, rating, comment);
+  res.json({ 
+    success: true, 
+    message: 'レビューを投稿しました',
+    review: review
   });
 });
 
@@ -377,29 +423,132 @@ function renderPage(title, content) {
             }
           });
         }
+
+        function submitReview(event, productId) {
+          event.preventDefault();
+          const rating = document.getElementById('rating').value;
+          const comment = document.getElementById('comment').value;
+
+          fetch('/api/reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId, rating, comment })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('レビューを投稿しました！');
+              window.location.reload();
+            } else {
+              alert('エラー: ' + data.error);
+            }
+          });
+        }
       </script>
     </body>
     </html>
   `;
 }
 
+function renderRatingStars(rating) {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+  let stars = '★'.repeat(fullStars);
+  if (hasHalfStar) stars += '☆';
+  stars += '☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0));
+  return stars;
+}
+
 function renderProductListing(cart) {
-  const productCards = products.map(product => `
+  const productCards = products.map(product => {
+    const avgRating = getProductAverageRating(product.id);
+    const reviewCount = getProductReviews(product.id).length;
+    return `
     <div class="product-card">
       <div class="product-image">${product.image}</div>
       <div class="product-name">${escapeHtml(product.name)}</div>
       <div class="product-description">${escapeHtml(product.description)}</div>
+      <div class="product-rating">${renderRatingStars(avgRating)} ${avgRating > 0 ? '(' + avgRating + ')' : ''}</div>
+      <div class="product-review-count" style="font-size: 12px; color: #666;">レビュー: ${reviewCount}件</div>
       <div class="product-price">¥${product.price.toLocaleString()}</div>
-      <button class="btn" onclick="addToCart(${product.id}, '${escapeHtml(product.name)}')">
-        カートに追加
-      </button>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn" onclick="addToCart(${product.id}, '${escapeHtml(product.name)}')">
+          カートに追加
+        </button>
+        <button class="btn btn-secondary" onclick="window.location.href='/product/${product.id}'">
+          詳細・レビュー
+        </button>
+      </div>
     </div>
-  `).join('');
+  `}).join('');
 
   return `
     <h1 class="page-title">商品一覧</h1>
     <div class="product-grid">
       ${productCards}
+    </div>
+  `;
+}
+
+function renderProductDetail(product, reviews, avgRating) {
+  const reviewsHTML = reviews.map(review => `
+    <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin: 8px 0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span style="font-weight: bold;">${renderRatingStars(review.rating)}</span>
+        <span style="font-size: 12px; color: #999;">${new Date(review.createdAt).toLocaleDateString('ja-JP')}</span>
+      </div>
+      <div style="color: #666;">${escapeHtml(review.comment)}</div>
+    </div>
+  `).join('');
+
+  return `
+    <h1 class="page-title">${escapeHtml(product.name)}</h1>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+      <div>
+        <div style="font-size: 80px; text-align: center; padding: 40px; background: white; border-radius: 8px;">${product.image}</div>
+        <p style="margin-top: 16px; color: #666;">${escapeHtml(product.description)}</p>
+        <div style="margin-top: 20px;">
+          <div style="font-size: 28px; color: #FF9900; font-weight: bold; margin-bottom: 16px;">¥${product.price.toLocaleString()}</div>
+          <button class="btn" onclick="addToCart(${product.id}, '${escapeHtml(product.name)}')" style="width: 100%;">
+            カートに追加
+          </button>
+          <a href="/" class="btn btn-secondary" style="width: 100%; text-align: center; display: block; margin-top: 8px; text-decoration: none;">
+            商品一覧に戻る
+          </a>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin-bottom: 16px;">レビュー</h2>
+        <div style="background: white; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+          <div style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">
+            ${renderRatingStars(avgRating)} ${avgRating > 0 ? avgRating + '/5.0' : 'まだレビューなし'}
+          </div>
+          <div style="color: #666;">総レビュー数: ${reviews.length}件</div>
+        </div>
+        
+        <h3 style="margin-bottom: 12px;">レビューを投稿</h3>
+        <form style="background: white; padding: 16px; border-radius: 8px; margin-bottom: 20px;" onsubmit="submitReview(event, ${product.id})">
+          <div class="form-group">
+            <label for="rating">評価 (星の数)</label>
+            <select id="rating" name="rating" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+              <option value="">選択してください</option>
+              <option value="5">★★★★★ 5つ星</option>
+              <option value="4">★★★★☆ 4つ星</option>
+              <option value="3">★★★☆☆ 3つ星</option>
+              <option value="2">★★☆☆☆ 2つ星</option>
+              <option value="1">★☆☆☆☆ 1つ星</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="comment">コメント</label>
+            <textarea id="comment" name="comment" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; resize: vertical;" rows="4"></textarea>
+          </div>
+          <button type="submit" class="btn" style="width: 100%;">レビューを投稿</button>
+        </form>
+
+        <h3 style="margin-bottom: 12px;">レビュー一覧</h3>
+        ${reviewsHTML.length > 0 ? reviewsHTML : '<div style="color: #999; padding: 16px; text-align: center;">レビューはまだありません</div>'}
+      </div>
     </div>
   `;
 }
