@@ -38,7 +38,7 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: claude-4-5-haiku-latest # 2026年の最新安定ID
+          model: claude-haiku-4-5-20251001
           github_token: ${{ secrets.GITHUB_TOKEN }} # これが必要です
 
       - name: Create Draft PR
