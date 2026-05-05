@@ -1,0 +1,17 @@
+{
+  "name": "nisemono_food",
+  "version": "1.0.0",
+  "description": "Simple EC site for fictional food items",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs"
+  },
+  "keywords": ["ecommerce", "food"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
