@@ -35,3 +35,26 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           model: claude-haiku-4-5-20251001
           github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Draft PR
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            
+            BRANCH_NAME=$(git branch --show-current)
+            
+            git add .
+            git commit -m "feat: AIによる自動実装"
+            git push origin "$BRANCH_NAME"
+
+            gh pr create \
+              --title "【AI】${{ github.event.issue.title || '自動実装の提案' }}" \
+              --body "Issue #${{ github.event.issue.number }} に基づき、Claudeがコードを生成しました。" \
+              --draft \
+              --base main
+          else
+            echo "No changes detected."
+          fi
