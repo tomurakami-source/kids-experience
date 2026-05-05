@@ -7,13 +7,23 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = 3000;
 
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
 app.use(express.json());
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
-  const cartItems = req.cookies?.cart ? JSON.parse(req.cookies.cart) : [];
-  res.send(renderPage('商品一覧', renderProductListing(cartItems)));
+  res.send(renderPage('商品一覧', renderProductListing([])));
 });
 
 app.get('/api/products', (req, res) => {
@@ -32,13 +42,29 @@ app.post('/api/cart/add', (req, res) => {
 });
 
 app.get('/cart', (req, res) => {
-  const cartData = req.query.items ? JSON.parse(req.query.items) : [];
+  let cartData = [];
+  if (req.query.items) {
+    try {
+      cartData = JSON.parse(req.query.items);
+    } catch (e) {
+      console.error('Invalid cart data:', e);
+      cartData = [];
+    }
+  }
   const cartHTML = renderCart(cartData);
   res.send(renderPage('ショッピングカート', cartHTML));
 });
 
 app.get('/checkout', (req, res) => {
-  const cartData = req.query.items ? JSON.parse(req.query.items) : [];
+  let cartData = [];
+  if (req.query.items) {
+    try {
+      cartData = JSON.parse(req.query.items);
+    } catch (e) {
+      console.error('Invalid cart data:', e);
+      cartData = [];
+    }
+  }
   const checkoutHTML = renderCheckout(cartData);
   res.send(renderPage('チェックアウト', checkoutHTML));
 });
@@ -361,10 +387,10 @@ function renderProductListing(cart) {
   const productCards = products.map(product => `
     <div class="product-card">
       <div class="product-image">${product.image}</div>
-      <div class="product-name">${product.name}</div>
-      <div class="product-description">${product.description}</div>
+      <div class="product-name">${escapeHtml(product.name)}</div>
+      <div class="product-description">${escapeHtml(product.description)}</div>
       <div class="product-price">¥${product.price.toLocaleString()}</div>
-      <button class="btn" onclick="addToCart(${product.id}, '${product.name}')">
+      <button class="btn" onclick="addToCart(${product.id}, '${escapeHtml(product.name)}')">
         カートに追加
       </button>
     </div>
@@ -397,7 +423,7 @@ function renderCart(cartItems) {
     total += subtotal;
     return `
       <tr>
-        <td>${product.name}</td>
+        <td>${escapeHtml(product.name)}</td>
         <td>¥${product.price.toLocaleString()}</td>
         <td>${item.quantity || 1}</td>
         <td>¥${subtotal.toLocaleString()}</td>
