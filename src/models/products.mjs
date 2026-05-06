@@ -68,5 +68,12 @@ export const products = [
     price: 1600,
     description: '月の光で満たされたバター',
     image: '🧈'
+  },
+  {
+    id: 11,
+    name: 'タマミツネの玉',
+    price: 2100,
+    description: 'モンハンの美しい泡狐竜タマミツネが持つ神秘的な玉',
+    image: '🔮'
   }
 ];
