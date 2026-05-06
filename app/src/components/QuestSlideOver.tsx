@@ -7,6 +7,7 @@ import {
   Sparkles, RefreshCw, CheckCircle, XCircle, Loader2,
 } from 'lucide-react';
 import { Quest, getConfig, getDifficultyStars } from './questUtils';
+import CelebrationEffects from './CelebrationEffects';
 import type { LucideProps } from 'lucide-react';
 
 type IconComponent = React.ComponentType<LucideProps>;
@@ -30,6 +31,40 @@ interface QuestSlideOverProps {
   isCompleted: boolean;
   onClose: () => void;
   onQuestComplete: (questId: number) => void;
+}
+
+function playSuccessSound() {
+  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const now = audioContext.currentTime;
+  
+  const notes = [
+    { freq: 523.25, time: 0.1 },
+    { freq: 659.25, time: 0.15 },
+    { freq: 783.99, time: 0.15 },
+  ];
+
+  notes.forEach(({ freq, time }) => {
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + time);
+
+    osc.start(now);
+    osc.stop(now + time);
+  });
+}
+
+function triggerVibration() {
+  if (navigator.vibrate) {
+    navigator.vibrate([50, 30, 50]);
+  }
 }
 
 /** Compress image to max 1024px, quality 0.82, returns base64 without prefix */
@@ -68,6 +103,7 @@ export default function QuestSlideOver({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [judgeResult, setJudgeResult] = useState<JudgeResult | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // Reset state when quest changes
   useEffect(() => {
@@ -75,6 +111,7 @@ export default function QuestSlideOver({
     setPreviewUrl(null);
     setPreviewFile(null);
     setJudgeResult(null);
+    setShowCelebration(false);
   }, [quest?.id]);
 
   // Body scroll lock + Escape key
@@ -121,6 +158,9 @@ export default function QuestSlideOver({
       setJudgeResult({ success: json.success, feedback: json.feedback });
       if (json.success) {
         setPhase('success');
+        setShowCelebration(true);
+        playSuccessSound();
+        triggerVibration();
         onQuestComplete(quest.id);
       } else {
         setPhase('failure');
@@ -145,6 +185,9 @@ export default function QuestSlideOver({
 
   return (
     <>
+      {/* Celebration Effects Canvas */}
+      <CelebrationEffects isActive={showCelebration} />
+
       {/* Hidden camera/file input */}
       <input
         ref={fileInputRef}
@@ -213,19 +256,41 @@ export default function QuestSlideOver({
                 </p>
                 <h2 className="text-xl font-black text-white leading-snug">{quest.title}</h2>
 
-                {/* CLEAR stamp in header */}
+                {/* CLEAR stamp in header - Enhanced "DON!" effect */}
                 <AnimatePresence>
                   {(isCompleted || phase === 'success') && (
-                    <motion.div
-                      initial={{ scale: 0, rotate: -20, opacity: 0 }}
-                      animate={{ scale: 1, rotate: -8, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                      className="absolute top-4 left-4 border-[3px] border-white rounded-lg px-3 py-1.5 bg-white/10"
-                      style={{ rotate: -8 }}
-                    >
-                      <p className="text-white font-black text-sm tracking-widest">QUEST CLEAR!</p>
-                    </motion.div>
+                    <>
+                      {/* Stamp impact background burst */}
+                      {phase === 'success' && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: [0, 1.2, 1] }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ duration: 0.4, type: 'spring', stiffness: 300 }}
+                          className="absolute inset-0 bg-white/20 rounded-lg"
+                        />
+                      )}
+                      {/* Main stamp */}
+                      <motion.div
+                        initial={{ scale: 0, rotate: -45, opacity: 0 }}
+                        animate={{ 
+                          scale: phase === 'success' ? [0, 1.15, 1] : 1,
+                          rotate: -8,
+                          opacity: 1,
+                        }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        transition={{ 
+                          type: 'spring', 
+                          stiffness: phase === 'success' ? 400 : 300,
+                          damping: phase === 'success' ? 15 : 20,
+                          duration: 0.5,
+                        }}
+                        className="absolute top-4 left-4 border-[4px] border-white rounded-lg px-3 py-1.5 bg-white/10 backdrop-blur-sm shadow-xl"
+                        style={{ rotate: -8 }}
+                      >
+                        <p className="text-white font-black text-sm tracking-widest drop-shadow-lg">QUEST CLEAR!</p>
+                      </motion.div>
+                    </>
                   )}
                 </AnimatePresence>
               </div>
@@ -353,52 +418,73 @@ export default function QuestSlideOver({
                       exit={{ opacity: 0 }}
                       className="flex flex-col items-center gap-5 px-6 py-10 text-center"
                     >
+                      {/* Large celebration icon with "DON!" impact */}
                       <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 280, damping: 16, delay: 0.1 }}
+                        initial={{ scale: 0, rotate: -20 }}
+                        animate={{ 
+                          scale: [0, 1.2, 1],
+                          rotate: 0,
+                        }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.1 }}
                       >
-                        <CheckCircle className="w-20 h-20 text-emerald-500" strokeWidth={1.5} />
+                        <CheckCircle className="w-24 h-24 text-emerald-500 drop-shadow-lg" strokeWidth={1.5} />
                       </motion.div>
+
+                      {/* Impact ring effect */}
+                      <motion.div
+                        initial={{ scale: 0, opacity: 1 }}
+                        animate={{ scale: 2, opacity: 0 }}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="absolute w-24 h-24 border-2 border-emerald-500 rounded-full"
+                      />
 
                       <div>
                         <motion.p
-                          initial={{ opacity: 0, y: 8 }}
+                          initial={{ opacity: 0, y: 12 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.25 }}
-                          className="text-2xl font-black text-gray-900 mb-1"
+                          transition={{ delay: 0.3 }}
+                          className="text-3xl font-black text-gray-900 mb-1"
                         >
                           クエストクリア！
                         </motion.p>
                         <motion.p
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.35 }}
-                          className="text-xs text-gray-400"
+                          transition={{ delay: 0.4 }}
+                          className="text-lg font-black text-emerald-600"
                         >
-                          QUEST CLEAR
+                          🎉 QUEST CLEAR 🎉
                         </motion.p>
                       </div>
 
                       <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 max-w-xs"
+                        initial={{ opacity: 0, y: 12, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ delay: 0.45 }}
+                        className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl px-6 py-5 max-w-xs shadow-lg"
                       >
                         <p className="text-sm font-semibold text-emerald-800 leading-relaxed">
                           {judgeResult.feedback}
                         </p>
                       </motion.div>
 
-                      {/* Confetti dots */}
-                      <div className="flex gap-2 mt-2">
+                      {/* Floating confetti dots animation */}
+                      <div className="flex gap-3 mt-4">
                         {['bg-emerald-400', 'bg-amber-400', 'bg-sky-400', 'bg-rose-400', 'bg-purple-400'].map((color, i) => (
                           <motion.div
                             key={i}
-                            className={`w-2.5 h-2.5 rounded-full ${color}`}
-                            animate={{ y: [0, -10, 0], scale: [1, 1.3, 1] }}
-                            transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.12 }}
+                            className={`w-3 h-3 rounded-full ${color} shadow-md`}
+                            animate={{ 
+                              y: [0, -15, 0],
+                              rotate: [0, 360],
+                              scale: [1, 1.2, 1],
+                            }}
+                            transition={{ 
+                              duration: 1.2, 
+                              repeat: Infinity, 
+                              delay: i * 0.15,
+                              ease: 'easeInOut',
+                            }}
                           />
                         ))}
                       </div>
