@@ -68,5 +68,40 @@ export const products = [
     price: 1600,
     description: '月の光で満たされたバター',
     image: '🧈'
+  },
+  {
+    id: 11,
+    name: 'タマミツネの涙',
+    price: 3500,
+    description: 'タマミツネから採取される希少な液体。水のように透き通った輝きを持つ',
+    image: '💧'
+  },
+  {
+    id: 12,
+    name: 'タマミツネの素材',
+    price: 2800,
+    description: 'タマミツネから採取される上質な素材。柔らかく優雅な手触り',
+    image: '✨'
+  },
+  {
+    id: 13,
+    name: 'タマミツネの宝玉',
+    price: 4200,
+    description: 'タマミツネが身につける神秘的な宝玉。月のような輝きを放つ',
+    image: '💎'
+  },
+  {
+    id: 14,
+    name: 'タマミツネの鱗',
+    price: 2200,
+    description: 'タマミツネの身体を覆う美しい鱗。虹色に輝く',
+    image: '🔮'
+  },
+  {
+    id: 15,
+    name: 'タマミツネのしぐさ人形',
+    price: 1900,
+    description: 'タマミツネの優雅なしぐさを再現した玩具。子どもに大人気',
+    image: '🎀'
   }
 ];
