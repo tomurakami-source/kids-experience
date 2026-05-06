@@ -116,14 +116,3 @@ export function renderProductDetail(product, reviews, averageRating, reviewCount
     </div>
   `;
 }
-
-function escapeHtml(text) {
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  };
-  return String(text).replace(/[&<>"']/g, m => map[m]);
-}
