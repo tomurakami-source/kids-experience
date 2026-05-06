@@ -9,6 +9,10 @@ export interface Quest {
   growth_point: string;
 }
 
+export interface QuestPhotos {
+  [questId: string]: string[];
+}
+
 export interface CategoryConfig {
   badge: string;
   badgeText: string;

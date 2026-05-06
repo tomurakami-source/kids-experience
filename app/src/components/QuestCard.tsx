@@ -19,13 +19,15 @@ interface QuestCardProps {
   isCompleted: boolean;
   onClick: () => void;
   index: number;
+  photos?: string[];
 }
 
-export default function QuestCard({ quest, isCompleted, onClick, index }: QuestCardProps) {
+export default function QuestCard({ quest, isCompleted, onClick, index, photos = [] }: QuestCardProps) {
   const cfg = getConfig(quest.category);
   const starCount = getDifficultyStars(quest.difficulty);
   const Icon = CATEGORY_ICONS[quest.category] ?? Star;
   const isHard = quest.difficulty === 'Hard';
+  const latestPhoto = photos.length > 0 ? photos[photos.length - 1] : null;
 
   return (
     <motion.div
@@ -61,7 +63,20 @@ export default function QuestCard({ quest, isCompleted, onClick, index }: QuestC
         {/* Category stripe */}
         <div className={`h-1.5 bg-gradient-to-r ${cfg.stripe}`} />
 
-        <div className="p-4 pb-5">
+        {/* Photo background for completed quests */}
+        {isCompleted && latestPhoto && (
+          <div
+            className="absolute inset-0 rounded-2xl opacity-10"
+            style={{
+              backgroundImage: `url('${latestPhoto}')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+
+        <div className="p-4 pb-5 relative z-10">
           {/* Row 1: icon + stars */}
           <div className="flex items-center justify-between mb-3">
             <div className={`p-2 rounded-xl ${cfg.iconBg}`}>

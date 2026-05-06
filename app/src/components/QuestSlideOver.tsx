@@ -29,7 +29,8 @@ interface QuestSlideOverProps {
   quest: Quest | null;
   isCompleted: boolean;
   onClose: () => void;
-  onQuestComplete: (questId: number) => void;
+  onQuestComplete: (questId: number, photo?: string) => void;
+  photos?: string[];
 }
 
 /** Compress image to max 1024px, quality 0.82, returns base64 without prefix */
@@ -61,13 +62,14 @@ async function compressImage(file: File): Promise<{ data: string; mediaType: str
 }
 
 export default function QuestSlideOver({
-  quest, isCompleted, onClose, onQuestComplete,
+  quest, isCompleted, onClose, onQuestComplete, photos = [],
 }: QuestSlideOverProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [judgeResult, setJudgeResult] = useState<JudgeResult | null>(null);
+  const [showGallery, setShowGallery] = useState(false);
 
   // Reset state when quest changes
   useEffect(() => {
@@ -121,7 +123,8 @@ export default function QuestSlideOver({
       setJudgeResult({ success: json.success, feedback: json.feedback });
       if (json.success) {
         setPhase('success');
-        onQuestComplete(quest.id);
+        const photoDataUrl = `data:${mediaType};base64,${data}`;
+        onQuestComplete(quest.id, photoDataUrl);
       } else {
         setPhase('failure');
       }
@@ -278,6 +281,43 @@ export default function QuestSlideOver({
                         <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                         <span>都会でも工夫次第で実行可能なクエストです</span>
                       </div>
+
+                      {isCompleted && photos.length > 0 && (
+                        <section>
+                          <button
+                            onClick={() => setShowGallery(!showGallery)}
+                            className="w-full rounded-2xl p-4 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors"
+                          >
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-2 flex items-center gap-1.5">
+                              🖼️ 冒険の記録（{photos.length}枚）
+                            </h3>
+                            <p className="text-xs text-gray-500">写真を見返してみよう</p>
+                          </button>
+
+                          {showGallery && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="mt-3 space-y-3"
+                            >
+                              {photos.map((photo, idx) => (
+                                <div key={idx} className="rounded-2xl overflow-hidden border border-gray-200 shadow-md">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={photo}
+                                    alt={`冒険の写真 ${idx + 1}`}
+                                    className="w-full object-cover max-h-64"
+                                  />
+                                  <div className="px-3 py-2 bg-gray-50 text-xs text-gray-500">
+                                    記録日時: {new Date(photo.startsWith('data:') ? Date.now() : parseInt(photo.split(',')[0]) || Date.now()).toLocaleDateString('ja-JP')}
+                                  </div>
+                                </div>
+                              ))}
+                            </motion.div>
+                          )}
+                        </section>
+                      )}
                     </motion.div>
                   )}
 

@@ -15,6 +15,7 @@ interface Quest {
 
 interface UserProgress {
   achieved_quest_ids: number[];
+  quest_photos?: Record<string, string[]>;
 }
 
 interface JudgeResult {
@@ -150,6 +151,15 @@ ${quest.photo_criteria}
       progress.achieved_quest_ids = [
         ...new Set([...progress.achieved_quest_ids, Number(questId)]),
       ];
+      if (!progress.quest_photos) {
+        progress.quest_photos = {};
+      }
+      const questIdStr = String(questId);
+      if (!progress.quest_photos[questIdStr]) {
+        progress.quest_photos[questIdStr] = [];
+      }
+      const photoDataUrl = `data:${mediaType};base64,${imageData}`;
+      progress.quest_photos[questIdStr].push(photoDataUrl);
       saveProgress(progress);
     }
 

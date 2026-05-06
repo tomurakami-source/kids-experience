@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Leaf, Globe, Coins, Flame, LayoutGrid } from 'lucide-react';
-import { Quest } from './questUtils';
+import { Quest, QuestPhotos } from './questUtils';
 import AdventureHeader from './AdventureHeader';
 import QuestCard from './QuestCard';
 import QuestSlideOver from './QuestSlideOver';
@@ -26,17 +26,25 @@ const TAB_ACTIVE_COLORS: Record<string, string> = {
 interface QuestBoardProps {
   quests: Quest[];
   initialCompletedIds: number[];
+  initialQuestPhotos: QuestPhotos;
 }
 
-export default function QuestBoard({ quests, initialCompletedIds }: QuestBoardProps) {
+export default function QuestBoard({ quests, initialCompletedIds, initialQuestPhotos }: QuestBoardProps) {
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
   const [completedIds, setCompletedIds] = useState<Set<number>>(new Set(initialCompletedIds));
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [questPhotos, setQuestPhotos] = useState<QuestPhotos>(initialQuestPhotos);
 
   const handleClose = useCallback(() => setSelectedQuest(null), []);
 
-  const handleQuestComplete = useCallback((questId: number) => {
+  const handleQuestComplete = useCallback((questId: number, photo?: string) => {
     setCompletedIds((prev) => new Set(prev).add(questId));
+    if (photo) {
+      setQuestPhotos((prev) => ({
+        ...prev,
+        [questId]: [...(prev[questId] ?? []), photo],
+      }));
+    }
   }, []);
 
   const filtered = activeCategory
@@ -105,6 +113,7 @@ export default function QuestBoard({ quests, initialCompletedIds }: QuestBoardPr
               isCompleted={completedIds.has(quest.id)}
               onClick={() => setSelectedQuest(quest)}
               index={i}
+              photos={questPhotos[quest.id] ?? []}
             />
           ))}
         </div>
@@ -122,6 +131,7 @@ export default function QuestBoard({ quests, initialCompletedIds }: QuestBoardPr
         isCompleted={selectedQuest ? completedIds.has(selectedQuest.id) : false}
         onClose={handleClose}
         onQuestComplete={handleQuestComplete}
+        photos={selectedQuest ? questPhotos[selectedQuest.id] ?? [] : []}
       />
     </div>
   );
