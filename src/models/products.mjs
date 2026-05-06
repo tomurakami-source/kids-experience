@@ -68,5 +68,26 @@ export const products = [
     price: 1600,
     description: '月の光で満たされたバター',
     image: '🧈'
+  },
+  {
+    id: 11,
+    name: 'ラッキーコイン',
+    price: 2100,
+    description: '幸運を呼ぶ架空の黄金のコイン',
+    image: '🪙'
+  },
+  {
+    id: 12,
+    name: 'ネビュラチョコ',
+    price: 1950,
+    description: '星雲の色をした神秘的なチョコレート',
+    image: '🌌'
+  },
+  {
+    id: 13,
+    name: 'アイスクリスタル',
+    price: 1350,
+    description: '凍った宝石のような架空のアイスクリーム',
+    image: '🧊'
   }
 ];
