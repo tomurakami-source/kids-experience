@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ChevronLeft, Camera, Users, MapPin, Star, Leaf, Globe, Coins, Flame,
+  ChevronLeft, Camera, Users, Star, Leaf, Globe, Coins, Flame,
   Sparkles, RefreshCw, CheckCircle, XCircle, Loader2,
 } from 'lucide-react';
 import { Quest, getConfig, getDifficultyStars } from './questUtils';
@@ -17,6 +17,13 @@ const CATEGORY_ICONS: Record<string, IconComponent> = {
   '社会・多様性': Globe,
   '自立・経済': Coins,
   '精神・レジリエンス': Flame,
+};
+
+const CATEGORY_PLACEHOLDERS: Record<string, string> = {
+  '自然・生存': '🌿',
+  '社会・多様性': '🌍',
+  '自立・経済': '💰',
+  '精神・レジリエンス': '🔥',
 };
 
 type Phase = 'idle' | 'preview' | 'judging' | 'success' | 'failure';
@@ -175,11 +182,12 @@ export default function QuestSpreadView({
   const cfg = getConfig(quest.category);
   const starCount = getDifficultyStars(quest.difficulty);
   const Icon = CATEGORY_ICONS[quest.category] ?? Star;
+  const placeholderEmoji = CATEGORY_PLACEHOLDERS[quest.category] ?? '✨';
 
-  const pageVariants = {
-    initial: { rotateY: 90, opacity: 0 },
-    animate: { rotateY: 0, opacity: 1 },
-    exit: { rotateY: -90, opacity: 0 },
+  const spreadVariants = {
+    initial: { opacity: 0, rotateY: 90 },
+    animate: { opacity: 1, rotateY: 0 },
+    exit: { opacity: 0, rotateY: -90 },
   };
 
   return (
@@ -200,13 +208,14 @@ export default function QuestSpreadView({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.4 }}
-        className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4 sm:p-8 flex flex-col"
+        className="min-h-screen bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 p-4 sm:p-6 md:p-8 flex flex-col relative"
+        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cdefs%3E%3Cpattern id=\'parchment\' width=\'100\' height=\'100\' patternUnits=\'userSpaceOnUse\'%3E%3Crect fill=\'%23fef5e7\' width=\'100\' height=\'100\'/%3E%3Cpath d=\'M0,0 Q25,25 50,20 T100,0\' stroke=\'%23f0e6d2\' fill=\'none\' opacity=\'0.1\'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill=\'url(%23parchment)\' width=\'100\' height=\'100\'/%3E%3C/svg%3E")' }}
       >
         <motion.button
           onClick={onBack}
           whileHover={{ scale: 1.1, x: -4 }}
           whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2 text-amber-800 font-bold text-sm mb-6 self-start"
+          className="flex items-center gap-2 text-amber-800 font-bold text-sm mb-4 self-start hover:text-amber-900 transition-colors"
         >
           <ChevronLeft className="w-5 h-5" />
           目次に戻る
@@ -214,253 +223,262 @@ export default function QuestSpreadView({
 
         <motion.div
           layout
-          className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto w-full"
+          className="flex-1 flex items-center justify-center px-2 sm:px-4"
         >
           <motion.div
-            variants={pageVariants}
+            variants={spreadVariants}
             initial="initial"
             animate="animate"
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="rounded-3xl bg-gradient-to-b from-amber-100 via-orange-50 to-yellow-50 border-4 border-amber-300 shadow-2xl p-8 flex flex-col items-center justify-center min-h-[400px]"
+            exit="exit"
+            transition={{ duration: 0.6, type: 'spring', stiffness: 100 }}
+            className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 md:gap-8"
           >
-            <div className="text-center">
-              <motion.div
-                animate={{ y: [0, -12, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="text-6xl sm:text-8xl mb-6"
-              >
-                🌍
-              </motion.div>
-              <h3 className="text-lg sm:text-xl font-black text-amber-900 mb-3">
-                異世界の景景
-              </h3>
-              <p className="text-sm text-amber-700 font-serif italic">
-                この冒険の舞台を思い浮かべよう...
-              </p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="rounded-3xl bg-gradient-to-b from-white via-amber-50 to-orange-50 border-4 border-amber-300 shadow-2xl p-8 flex flex-col"
-          >
-            <div className="flex items-start justify-between mb-6 pb-4 border-b-2 border-amber-200">
-              <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-2xl ${cfg.iconBg}`}>
-                  <Icon className={`w-6 h-6 ${cfg.iconColor}`} />
-                </div>
-                <div>
-                  <p className={`text-xs font-semibold ${cfg.iconColor} uppercase tracking-widest`}>
+            <motion.div
+              className="rounded-2xl md:rounded-l-3xl bg-gradient-to-br from-amber-100 via-yellow-50 to-amber-50 border-4 border-amber-300 shadow-2xl p-6 md:p-8 flex flex-col items-center justify-between min-h-[450px] md:min-h-[550px] relative overflow-hidden"
+              style={{
+                backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(180, 100, 20, 0.02) 2px, rgba(180, 100, 20, 0.02) 4px)',
+              }}
+            >
+              <div className="relative z-10 w-full h-full flex flex-col items-center justify-between">
+                <div className="text-center mb-4">
+                  <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${cfg.iconColor}`}>
                     {quest.category}
                   </p>
-                  <p className="text-xs text-gray-500 font-mono">Quest #{String(quest.id).padStart(2, '0')}</p>
+                  <p className="text-xs text-amber-700 font-mono">Quest #{String(quest.id).padStart(2, '0')}</p>
                 </div>
-              </div>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-4 h-4 ${i < starCount ? cfg.iconColor : 'text-gray-200'}`}
-                    fill={i < starCount ? 'currentColor' : 'none'}
-                    strokeWidth={1.5}
-                  />
-                ))}
-              </div>
-            </div>
 
-            <AnimatePresence mode="wait">
-              {phase === 'idle' && (
-                <motion.div
-                  key="idle"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex-1 overflow-y-auto space-y-4 mb-6"
-                >
-                  <div>
-                    <h2 className="text-xl font-black text-gray-900 mb-2 font-serif">
+                <div className="flex-1 flex items-center justify-center">
+                  <motion.div
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    className="text-center"
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                      className="text-5xl md:text-6xl mb-4"
+                    >
+                      {placeholderEmoji}
+                    </motion.div>
+                    <h2 className="text-xl md:text-2xl font-black text-amber-900 mb-3 font-serif px-2">
                       {quest.title}
                     </h2>
-                  </div>
-
-                  <section>
-                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      クエスト内容
-                    </h3>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {quest.description}
+                    <p className="text-sm text-amber-700 font-serif italic px-2">
+                      {quest.description.substring(0, 100)}...
                     </p>
-                  </section>
+                  </motion.div>
+                </div>
 
-                  <section className={`rounded-2xl p-3 border ${cfg.sectionBg} ${cfg.sectionBorder}`}>
-                    <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1 ${cfg.sectionText}`}>
-                      <Users className="w-3.5 h-3.5" />
-                      親のガイド
-                    </h4>
-                    <p className={`text-xs leading-relaxed ${cfg.sectionText}`}>
-                      {quest.parent_guide}
-                    </p>
-                  </section>
+                <div className="flex items-center gap-1 justify-center">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-4 h-4 ${i < starCount ? cfg.iconColor : 'text-gray-300'}`}
+                      fill={i < starCount ? 'currentColor' : 'none'}
+                      strokeWidth={1.5}
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
 
-                  <section className="rounded-2xl p-3 border bg-slate-50 border-slate-200">
-                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <Camera className="w-3.5 h-3.5" />
-                      クリア証明の条件
-                    </h4>
-                    <p className="text-xs text-slate-700 leading-relaxed">
-                      {quest.photo_criteria}
-                    </p>
-                  </section>
-
-                  <section className="rounded-2xl p-3 border bg-indigo-50 border-indigo-100">
-                    <h4 className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      成長ポイント
-                    </h4>
-                    <p className="text-xs font-semibold text-indigo-800">
-                      {quest.growth_point}
-                    </p>
-                  </section>
-                </motion.div>
-              )}
-
-              {phase === 'preview' && previewUrl && (
-                <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col mb-6">
-                  <p className="text-sm font-bold text-gray-700 mb-3">この写真でいい？</p>
-                  <div className="rounded-2xl overflow-hidden border-2 border-gray-200 shadow-md flex-1 flex items-center justify-center">
-                    <img src={previewUrl} alt="プレビュー" className="w-full h-full object-cover" />
-                  </div>
-                </motion.div>
-              )}
-
-              {phase === 'judging' && (
-                <motion.div
-                  key="judging"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex-1 flex flex-col items-center justify-center gap-4 mb-6"
-                >
-                  <div className="relative w-20 h-20">
-                    <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${cfg.stripe} flex items-center justify-center shadow-lg`}>
-                      <Camera className="w-10 h-10 text-white" />
-                    </div>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-                      className="absolute -inset-2"
-                    >
-                      <Loader2 className="w-full h-full text-indigo-400 opacity-60" />
-                    </motion.div>
-                  </div>
-                  <p className="text-sm font-black text-gray-900">AIが判定中…</p>
-                </motion.div>
-              )}
-
-              {phase === 'success' && judgeResult && (
-                <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center gap-4 mb-6">
-                  <CheckCircle className="w-20 h-20 text-emerald-500" strokeWidth={1.5} />
-                  <p className="text-2xl font-black text-gray-900">クエストクリア！</p>
-                  <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl px-4 py-3 text-center">
-                    <p className="text-xs font-semibold text-emerald-800">
-                      {judgeResult.feedback}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-
-              {phase === 'failure' && judgeResult && (
-                <motion.div key="failure" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center gap-4 mb-6">
-                  <XCircle className="w-20 h-20 text-rose-400" strokeWidth={1.5} />
-                  <p className="text-lg font-black text-gray-900">もう少しだ！</p>
-                  <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-center">
-                    <p className="text-xs font-semibold text-rose-800">
-                      {judgeResult.feedback}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div className="border-t-2 border-amber-200 pt-4">
+            <motion.div
+              className="rounded-2xl md:rounded-r-3xl bg-gradient-to-br from-white via-amber-50 to-orange-50 border-4 border-amber-300 shadow-2xl p-6 md:p-8 flex flex-col min-h-[450px] md:min-h-[550px] relative overflow-hidden"
+              style={{
+                backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(180, 100, 20, 0.02) 2px, rgba(180, 100, 20, 0.02) 4px)',
+              }}
+            >
               <AnimatePresence mode="wait">
-                {isCompleted && phase === 'idle' && (
+                {phase === 'idle' && (
                   <motion.div
-                    key="completed"
+                    key="idle"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-center text-emerald-600 font-bold text-sm mb-3"
+                    exit={{ opacity: 0 }}
+                    className="flex-1 overflow-y-auto space-y-4 mb-6"
                   >
-                    ✨ このクエストはクリア済みです！
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-600 uppercase tracking-widest mb-2">
+                        冒険の詳細
+                      </h3>
+                    </div>
+
+                    <section>
+                      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                        クエスト説明
+                      </h4>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {quest.description}
+                      </p>
+                    </section>
+
+                    <section className={`rounded-2xl p-3 border ${cfg.sectionBg} ${cfg.sectionBorder}`}>
+                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1 ${cfg.sectionText}`}>
+                        <Users className="w-3.5 h-3.5" />
+                        親のガイド
+                      </h4>
+                      <p className={`text-xs leading-relaxed ${cfg.sectionText}`}>
+                        {quest.parent_guide}
+                      </p>
+                    </section>
+
+                    <section className="rounded-2xl p-3 border bg-slate-50 border-slate-200">
+                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Camera className="w-3.5 h-3.5" />
+                        写真の条件
+                      </h4>
+                      <p className="text-xs text-slate-700 leading-relaxed">
+                        {quest.photo_criteria}
+                      </p>
+                    </section>
+
+                    <section className="rounded-2xl p-3 border bg-indigo-50 border-indigo-100">
+                      <h4 className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        成長ポイント
+                      </h4>
+                      <p className="text-xs font-semibold text-indigo-800">
+                        {quest.growth_point}
+                      </p>
+                    </section>
                   </motion.div>
                 )}
 
-                {!isCompleted && phase === 'idle' && (
-                  <motion.button
-                    key="camera-btn"
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleCameraClick}
-                    className={`w-full py-3 rounded-xl bg-gradient-to-r ${cfg.stripe} text-white font-black text-sm shadow-lg flex items-center justify-center gap-2`}
-                  >
-                    <Camera className="w-4 h-4" />
-                    冒険を記録する
-                  </motion.button>
-                )}
-
-                {phase === 'preview' && (
-                  <motion.div key="preview-btns" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleSubmit}
-                      className={`w-full py-3 rounded-xl bg-gradient-to-r ${cfg.stripe} text-white font-black text-sm shadow-lg`}
-                    >
-                      <Sparkles className="w-4 h-4 inline mr-2" />
-                      クリア判定する！
-                    </motion.button>
-                    <button
-                      onClick={handleRetry}
-                      className="w-full py-2 rounded-xl border border-gray-200 text-gray-500 text-xs font-semibold hover:bg-gray-50"
-                    >
-                      <RefreshCw className="w-3 h-3 inline mr-1" />
-                      撮り直す
-                    </button>
+                {phase === 'preview' && previewUrl && (
+                  <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col mb-6">
+                    <p className="text-sm font-bold text-gray-700 mb-3">この写真でいい？</p>
+                    <div className="rounded-2xl overflow-hidden border-2 border-gray-200 shadow-md flex-1 flex items-center justify-center">
+                      <img src={previewUrl} alt="プレビュー" className="w-full h-full object-cover" />
+                    </div>
                   </motion.div>
                 )}
 
-                {phase === 'success' && (
-                  <motion.button
-                    key="success-btn"
-                    whileTap={{ scale: 0.95 }}
-                    onClick={onBack}
-                    className="w-full py-3 rounded-xl bg-emerald-500 text-white font-black text-sm shadow-lg"
+                {phase === 'judging' && (
+                  <motion.div
+                    key="judging"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex-1 flex flex-col items-center justify-center gap-4 mb-6"
                   >
-                    <CheckCircle className="w-4 h-4 inline mr-2" />
-                    目次に戻る
-                  </motion.button>
+                    <div className="relative w-20 h-20">
+                      <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${cfg.stripe} flex items-center justify-center shadow-lg`}>
+                        <Camera className="w-10 h-10 text-white" />
+                      </div>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                        className="absolute -inset-2"
+                      >
+                        <Loader2 className="w-full h-full text-indigo-400 opacity-60" />
+                      </motion.div>
+                    </div>
+                    <p className="text-sm font-black text-gray-900">AIが判定中…</p>
+                  </motion.div>
                 )}
 
-                {phase === 'failure' && (
-                  <motion.div key="failure-btn" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleCameraClick}
-                      className={`w-full py-3 rounded-xl bg-gradient-to-r ${cfg.stripe} text-white font-black text-sm shadow-lg`}
-                    >
-                      <Camera className="w-4 h-4 inline mr-2" />
-                      もう一回！
-                    </motion.button>
-                    <button
-                      onClick={onBack}
-                      className="w-full py-2 rounded-xl border border-gray-200 text-gray-500 text-xs font-semibold hover:bg-gray-50"
-                    >
-                      あとでチャレンジ
-                    </button>
+                {phase === 'success' && judgeResult && (
+                  <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center gap-4 mb-6">
+                    <CheckCircle className="w-20 h-20 text-emerald-500" strokeWidth={1.5} />
+                    <p className="text-2xl font-black text-gray-900">クエストクリア！</p>
+                    <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl px-4 py-3 text-center">
+                      <p className="text-xs font-semibold text-emerald-800">
+                        {judgeResult.feedback}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {phase === 'failure' && judgeResult && (
+                  <motion.div key="failure" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center gap-4 mb-6">
+                    <XCircle className="w-20 h-20 text-rose-400" strokeWidth={1.5} />
+                    <p className="text-lg font-black text-gray-900">もう少しだ！</p>
+                    <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-center">
+                      <p className="text-xs font-semibold text-rose-800">
+                        {judgeResult.feedback}
+                      </p>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+
+              <div className="border-t-2 border-amber-200 pt-4">
+                <AnimatePresence mode="wait">
+                  {isCompleted && phase === 'idle' && (
+                    <motion.div
+                      key="completed"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center text-emerald-600 font-bold text-sm mb-3"
+                    >
+                      ✨ このクエストはクリア済みです！
+                    </motion.div>
+                  )}
+
+                  {!isCompleted && phase === 'idle' && (
+                    <motion.button
+                      key="camera-btn"
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleCameraClick}
+                      className={`w-full py-3 rounded-xl bg-gradient-to-r ${cfg.stripe} text-white font-black text-sm shadow-lg flex items-center justify-center gap-2`}
+                    >
+                      <Camera className="w-4 h-4" />
+                      冒険を記録する
+                    </motion.button>
+                  )}
+
+                  {phase === 'preview' && (
+                    <motion.div key="preview-btns" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleSubmit}
+                        className={`w-full py-3 rounded-xl bg-gradient-to-r ${cfg.stripe} text-white font-black text-sm shadow-lg`}
+                      >
+                        <Sparkles className="w-4 h-4 inline mr-2" />
+                        クリア判定する！
+                      </motion.button>
+                      <button
+                        onClick={handleRetry}
+                        className="w-full py-2 rounded-xl border border-gray-200 text-gray-500 text-xs font-semibold hover:bg-gray-50"
+                      >
+                        <RefreshCw className="w-3 h-3 inline mr-1" />
+                        撮り直す
+                      </button>
+                    </motion.div>
+                  )}
+
+                  {phase === 'success' && (
+                    <motion.button
+                      key="success-btn"
+                      whileTap={{ scale: 0.95 }}
+                      onClick={onBack}
+                      className="w-full py-3 rounded-xl bg-emerald-500 text-white font-black text-sm shadow-lg"
+                    >
+                      <CheckCircle className="w-4 h-4 inline mr-2" />
+                      目次に戻る
+                    </motion.button>
+                  )}
+
+                  {phase === 'failure' && (
+                    <motion.div key="failure-btn" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleCameraClick}
+                        className={`w-full py-3 rounded-xl bg-gradient-to-r ${cfg.stripe} text-white font-black text-sm shadow-lg`}
+                      >
+                        <Camera className="w-4 h-4 inline mr-2" />
+                        もう一回！
+                      </motion.button>
+                      <button
+                        onClick={onBack}
+                        className="w-full py-2 rounded-xl border border-gray-200 text-gray-500 text-xs font-semibold hover:bg-gray-50"
+                      >
+                        あとでチャレンジ
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
           </motion.div>
         </motion.div>
       </motion.div>
