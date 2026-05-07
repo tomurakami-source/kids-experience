@@ -1,71 +1,36 @@
-# Kids Experience Quest (Season 1)
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-「子どもの視野を広げる20のグローバル・クエスト」を通じて、次世代の生きる力を育むサービス。
+## Getting Started
 
----
+First, run the development server:
 
-## Season 1: 20 Global Quests — ビジョン
-
-このプロジェクトは、単なる遊びの記録ではありません。
-世界基準の教育（モンテッソーリ、シュタイナー、ナショナル・トラスト等）をベースに、子どもたちが「自分の力でやった！」と実感できる本物の体験を設計します。
-
-### なぜ「グローバル・スタンダード」か
-
-モンテッソーリの「自立」、シュタイナーの「全人教育」、英国ナショナル・トラストの「体験価値」、UNICEFの「生活スキル（Life Skills）」という4大潮流を統合し、身体・感情・社会・経済の各知性を同時に育む体験設計を行っています。
-
----
-
-## 4つの柱
-
-| # | カテゴリ | 狙い | クエスト数 |
-|---|---|---|---|
-| 1 | **自然・生存** | 生命の循環を肌で感じる | 5 |
-| 2 | **社会・多様性** | 未知の他者と繋がる度胸を持つ | 5 |
-| 3 | **自立・経済** | 社会の仕組みを実体験で学ぶ | 5 |
-| 4 | **精神・レジリエンス** | 失敗を誇りに変える力を養う | 5 |
-
----
-
-## Data Schema
-
-クエストデータは `data/quests.json` で管理します。
-
-### トップレベル
-
-```json
-{
-  "season": 1,
-  "theme": "Global Adventure",
-  "quests": [ ... ]
-}
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-### 各クエストのフィールド
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-| フィールド | 型 | 説明 |
-|---|---|---|
-| `id` | number | クエスト固有ID（1〜20） |
-| `title` | string | ワクワクするクエスト名 |
-| `category` | string | 4カテゴリのいずれか |
-| `difficulty` | string | `Easy` / `Normal` / `Hard` |
-| `description` | string | 子ども向けの具体的な説明文 |
-| `parent_guide` | string | 親がどう見守るべきかのポイント |
-| `photo_criteria` | string | AIが判定するための「証明写真」の条件 |
-| `growth_point` | string | この体験でどんな力が伸びるか |
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### 実装ヒント
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-- `photo_criteria` — Vision APIによる自動クリア判定に使用
-- `difficulty` — 年齢・経験に応じたフィルタリングに使用
-- `category` — 4軸バランスのダッシュボード表示に活用
-- `growth_point` — 保護者向けレポート・振り返り機能に活用
+## Learn More
 
----
+To learn more about Next.js, take a look at the following resources:
 
-## ファイル構成
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-```
-kids-experience/
-└── data/
-    └── quests.json   # Season 1 全20クエストのマスターデータ
-```
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
