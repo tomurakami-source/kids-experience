@@ -122,11 +122,20 @@ export default function TableOfContents({
                       <motion.div
                         initial={{ scale: 0, rotate: -45 }}
                         animate={{ scale: 1, rotate: -15 }}
-                        className="border-2 border-red-500 rounded-lg px-2 py-1 bg-white shadow-md"
+                        whileHover={{ scale: 1.1, rotate: -10 }}
+                        className="relative w-12 h-12 flex items-center justify-center"
                       >
-                        <p className="text-red-500 font-black text-xs tracking-widest">
-                          CLEAR
-                        </p>
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-br from-red-500 to-red-700 rounded-full shadow-lg"
+                          style={{ borderRadius: '50%' }}
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                        />
+                        <div className="relative z-10 w-10 h-10 bg-gradient-to-br from-red-600 to-red-800 rounded-full shadow-md flex items-center justify-center border-2 border-red-300">
+                          <p className="text-white font-black text-xs tracking-widest text-center px-1">
+                            ✓
+                          </p>
+                        </div>
                       </motion.div>
                     )}
                     <ChevronRight className="w-5 h-5 text-gray-400" />
