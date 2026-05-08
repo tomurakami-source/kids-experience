@@ -53,6 +53,13 @@ export async function DELETE(request: NextRequest) {
   const id = new URL(request.url).searchParams.get('id');
   if (!id) return Response.json({ error: 'id is required' }, { status: 400 });
 
+  // Storage の写真を先に削除（profile_id フォルダ以下）
+  const { data: files } = await supabase.storage.from('quest-photos').list(id);
+  if (files && files.length > 0) {
+    const paths = files.map((f) => `${id}/${f.name}`);
+    await supabase.storage.from('quest-photos').remove(paths);
+  }
+
   const { error } = await supabase
     .from('profiles')
     .delete()
