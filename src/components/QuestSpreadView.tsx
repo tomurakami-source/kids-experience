@@ -14,6 +14,7 @@ const CATEGORY_PLACEHOLDERS: Record<string, string> = {
   '社会・多様性': '🌍',
   '自立・経済': '💰',
   '精神・レジリエンス': '🔥',
+  'チュートリアル': '✌️',
 };
 
 type Phase = 'idle' | 'preview' | 'judging' | 'success' | 'failure';

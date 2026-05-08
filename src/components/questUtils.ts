@@ -81,6 +81,20 @@ export const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
     sectionBorder: 'border-rose-200',
     sectionText: 'text-rose-800',
   },
+  'チュートリアル': {
+    badge: 'bg-yellow-100',
+    badgeText: 'text-yellow-800',
+    stripe: 'from-yellow-300 via-yellow-400 to-amber-400',
+    cardFrom: 'from-yellow-50/60',
+    iconBg: 'bg-yellow-100',
+    iconColor: 'text-yellow-600',
+    borderColor: 'border-yellow-200',
+    glowShadow: 'shadow-yellow-400/50',
+    ringColor: 'ring-yellow-300',
+    sectionBg: 'bg-yellow-50',
+    sectionBorder: 'border-yellow-200',
+    sectionText: 'text-yellow-800',
+  },
 };
 
 export const DEFAULT_CONFIG: CategoryConfig = {
