@@ -141,7 +141,6 @@ export default function AdventureBook({ quests, profile, onBackToProfiles }: Adv
           <motion.div key="cover" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <CoverPage
               onNameSet={() => setCurrentView('toc')}
-              prefillName={profile.name}
             />
           </motion.div>
         )}
