@@ -171,7 +171,7 @@ export default function ProfileSelector({ onSelect }: ProfileSelectorProps) {
                   </div>
                   <button
                     onClick={(e) => handleDelete(profile.id, e)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-lg text-rose-400/60 hover:text-rose-400 hover:bg-rose-900/20"
+                    className="p-2.5 rounded-xl text-rose-400 bg-rose-900/30 border border-rose-500/30 active:scale-95 transition-transform"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
