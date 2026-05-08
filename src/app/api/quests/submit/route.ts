@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     const { questId, imageData, mediaType = 'image/jpeg', profileId, debugForceSuccess } = body;
 
-    if (!questId || !imageData || !profileId) {
+    if (questId == null || !imageData || !profileId) {
       return Response.json(
         { error: 'questId, imageData, profileId は必須です', success: false, feedback: '' },
         { status: 400 },
