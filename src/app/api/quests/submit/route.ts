@@ -1,21 +1,9 @@
 import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { createClient } from '@/lib/supabase/server';
 
-// Paths resolved from Next.js project root (kids-experience/app)
-const QUESTS_FILE = join(process.cwd(), 'src', 'data', 'quests.json');
-const PROGRESS_FILE = join(process.cwd(), '..', 'data', 'user_progress.json');
-
-interface Quest {
-  id: number;
-  title: string;
-  photo_criteria: string;
-}
-
-interface UserProgress {
-  achieved_quest_ids: number[];
-}
+// Vercel: allow up to 60s for Claude Vision + Storage upload
+export const maxDuration = 60;
 
 interface JudgeResult {
   success: boolean;
@@ -24,56 +12,102 @@ interface JudgeResult {
 
 type ImageMediaType = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
 
-function loadProgress(): UserProgress {
-  try {
-    return JSON.parse(readFileSync(PROGRESS_FILE, 'utf-8')) as UserProgress;
-  } catch {
-    return { achieved_quest_ids: [] };
-  }
-}
-
-function saveProgress(progress: UserProgress) {
-  writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2), 'utf-8');
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as {
       questId: number;
       imageData: string;
       mediaType?: string;
+      profileId: string;
+      debugForceSuccess?: boolean;
     };
 
-    const { questId, imageData, mediaType = 'image/jpeg' } = body;
+    const { questId, imageData, mediaType = 'image/jpeg', profileId, debugForceSuccess } = body;
 
-    if (!questId || !imageData) {
+    if (!questId || !imageData || !profileId) {
       return Response.json(
-        { error: 'questId と imageData は必須です', success: false, feedback: '' },
+        { error: 'questId, imageData, profileId は必須です', success: false, feedback: '' },
         { status: 400 },
       );
     }
 
-    // Load quest data
-    const questFile = JSON.parse(readFileSync(QUESTS_FILE, 'utf-8')) as { quests: Quest[] };
-    const quest = questFile.quests.find((q) => q.id === Number(questId));
-    if (!quest) {
+    const isLocal = profileId === 'local';
+    const supabaseConfigured =
+      Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+      Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+    // Supabase auth & duplicate check (skipped in local mode)
+    let supabase: Awaited<ReturnType<typeof createClient>> | null = null;
+    if (!isLocal && supabaseConfigured) {
+      supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return Response.json({ error: 'Unauthorized', success: false, feedback: '' }, { status: 401 });
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', profileId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) {
+        return Response.json({ error: 'Profile not found', success: false, feedback: '' }, { status: 404 });
+      }
+
+      const { data: existing } = await supabase
+        .from('quest_logs')
+        .select('id, photo_url, ai_comment')
+        .eq('profile_id', profileId)
+        .eq('quest_id', questId)
+        .eq('status', 'completed')
+        .single();
+
+      if (existing) {
+        return Response.json({
+          success: true,
+          feedback: 'このクエストはもうクリア済みだよ！すごいね！',
+          alreadyCompleted: true,
+          photoUrl: existing.photo_url ?? null,
+          aiComment: existing.ai_comment ?? null,
+        });
+      }
+    }
+
+    // Find quest from Supabase
+    const supabaseForQuest = await createClient();
+    const { data: questRow } = await supabaseForQuest
+      .from('quests')
+      .select('title, criteria')
+      .eq('id', Number(questId))
+      .single();
+    if (!questRow) {
       return Response.json(
         { error: 'クエストが見つかりません', success: false, feedback: '' },
         { status: 404 },
       );
     }
+    const quest = {
+      title: questRow.title as string,
+      photo_criteria: (questRow.criteria as Record<string, string>)?.photo_criteria ?? '',
+    };
 
-    // Check if already completed
-    const progress = loadProgress();
-    if (progress.achieved_quest_ids.includes(Number(questId))) {
-      return Response.json({
-        success: true,
-        feedback: 'このクエストはもうクリア済みだよ！すごいね！',
-        alreadyCompleted: true,
-      });
+    // DEV: force success without calling Claude Vision (development only)
+    if (debugForceSuccess && process.env.NODE_ENV === 'development') {
+      const devResult: JudgeResult = { success: true, feedback: '[DEV] デバッグ達成' };
+      if (supabase) {
+        await supabase
+          .from('quest_logs')
+          .upsert(
+            { profile_id: profileId, quest_id: Number(questId), status: 'completed',
+              photo_url: null, ai_comment: devResult.feedback, completed_at: new Date().toISOString() },
+            { onConflict: 'profile_id,quest_id' },
+          );
+      }
+      return Response.json({ ...devResult, photoUrl: null });
     }
 
-    // Validate API key
     if (!process.env.ANTHROPIC_API_KEY) {
       return Response.json(
         { error: 'ANTHROPIC_API_KEY が設定されていません', success: false, feedback: '' },
@@ -81,7 +115,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call Claude claude-sonnet-4-6 Vision
+    // Claude Vision judgment
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
     const judgePrompt = `あなたは子供の冒険を応援する判定員です。この画像が、以下の「証明写真の条件」を満たしているか判定してください。
@@ -123,7 +157,6 @@ ${quest.photo_criteria}
       ],
     });
 
-    // Parse JSON from response
     const rawText =
       response.content[0].type === 'text' ? response.content[0].text.trim() : '';
 
@@ -145,15 +178,42 @@ ${quest.photo_criteria}
       // use default result
     }
 
-    // Persist progress on success
-    if (result.success) {
-      progress.achieved_quest_ids = [
-        ...new Set([...progress.achieved_quest_ids, Number(questId)]),
-      ];
-      saveProgress(progress);
+    // Persist to Supabase on success (skipped in local mode)
+    let photoUrl: string | null = null;
+    if (result.success && supabase) {
+      // Upload photo to Storage
+      try {
+        const binaryStr = atob(imageData);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+        const blob = new Blob([bytes], { type: mediaType });
+        const storagePath = `${profileId}/${questId}.jpg`;
+        const { error: uploadError } = await supabase.storage
+          .from('quest-photos')
+          .upload(storagePath, blob, { upsert: true, contentType: mediaType });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from('quest-photos').getPublicUrl(storagePath);
+          photoUrl = urlData.publicUrl;
+        }
+      } catch { /* storage failure is non-fatal */ }
+
+      const { error: upsertError } = await supabase
+        .from('quest_logs')
+        .upsert(
+          {
+            profile_id: profileId,
+            quest_id: Number(questId),
+            status: 'completed',
+            photo_url: photoUrl,
+            ai_comment: result.feedback,
+            completed_at: new Date().toISOString(),
+          },
+          { onConflict: 'profile_id,quest_id' },
+        );
+      if (upsertError) console.error('[quest_logs upsert]', upsertError);
     }
 
-    return Response.json(result);
+    return Response.json({ ...result, photoUrl });
 
   } catch (err) {
     console.error('[/api/quests/submit]', err);

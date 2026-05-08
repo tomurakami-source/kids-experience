@@ -1,27 +1,56 @@
-export const dynamic = 'force-dynamic';
+'use client';
 
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import questData from '@/data/quests.json';
+import { useState, useEffect } from 'react';
 import AdventureBook from '@/components/AdventureBook';
+import ProfileSelector, { type Profile } from '@/components/ProfileSelector';
 import { Quest } from '@/components/questUtils';
+import { createClient } from '@/lib/supabase/client';
 
-function loadAchievedIds(): number[] {
-  try {
-    const raw = readFileSync(join(process.cwd(), '..', 'data', 'user_progress.json'), 'utf-8');
-    const parsed = JSON.parse(raw) as { achieved_quest_ids: number[] };
-    return parsed.achieved_quest_ids ?? [];
-  } catch {
-    return [];
-  }
-}
+const DIFFICULTY_MAP: Record<number, 'Easy' | 'Normal' | 'Hard'> = { 1: 'Easy', 2: 'Normal', 3: 'Hard' };
+
+const LOCAL_PROFILE: Profile = { id: 'local', name: '', avatar: 'sword', created_at: '' };
+
+const SUPABASE_CONFIGURED =
+  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+  Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 export default function Home() {
-  const achievedIds = loadAchievedIds();
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(
+    SUPABASE_CONFIGURED ? null : LOCAL_PROFILE,
+  );
+  const [quests, setQuests] = useState<Quest[]>([]);
+
+  useEffect(() => {
+    if (!SUPABASE_CONFIGURED) return;
+    const supabase = createClient();
+    supabase
+      .from('quests')
+      .select('id, title, category, difficulty, description, criteria')
+      .order('id')
+      .then(({ data }) => {
+        if (!data) return;
+        setQuests(data.map((r) => ({
+          id: r.id,
+          title: r.title,
+          category: r.category,
+          difficulty: DIFFICULTY_MAP[r.difficulty as number] ?? 'Normal',
+          description: r.description ?? '',
+          parent_guide: (r.criteria as Record<string, string>)?.parent_guide ?? '',
+          photo_criteria: (r.criteria as Record<string, string>)?.photo_criteria ?? '',
+          growth_point: (r.criteria as Record<string, string>)?.growth_point ?? '',
+        })));
+      });
+  }, []);
+
+  if (!selectedProfile) {
+    return <ProfileSelector onSelect={setSelectedProfile} />;
+  }
+
   return (
     <AdventureBook
-      quests={questData.quests as Quest[]}
-      initialCompletedIds={achievedIds}
+      quests={quests}
+      profile={selectedProfile}
+      onBackToProfiles={SUPABASE_CONFIGURED ? () => setSelectedProfile(null) : () => {}}
     />
   );
 }

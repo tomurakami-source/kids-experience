@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Star, Leaf, Globe, Coins, Flame, ChevronRight } from 'lucide-react';
+import { Star, Leaf, Globe, Coins, Flame, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Quest, getConfig, getDifficultyStars } from './questUtils';
 import type { LucideProps } from 'lucide-react';
 
@@ -19,6 +19,8 @@ interface TableOfContentsProps {
   adventurerName: string;
   completedIds: Set<number>;
   onQuestSelect: (questId: number) => void;
+  onIntroOpen: () => void;
+  onBackToCover: () => void;
 }
 
 export default function TableOfContents({
@@ -26,6 +28,8 @@ export default function TableOfContents({
   adventurerName,
   completedIds,
   onQuestSelect,
+  onIntroOpen,
+  onBackToCover,
 }: TableOfContentsProps) {
   const completedCount = completedIds.size;
   const totalCount = quests.length;
@@ -38,6 +42,19 @@ export default function TableOfContents({
         transition={{ duration: 0.5 }}
         className="max-w-4xl mx-auto"
       >
+        <motion.button
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.05 }}
+          whileHover={{ scale: 1.05, x: -3 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={onBackToCover}
+          className="flex items-center gap-1.5 text-amber-800 font-bold text-sm mb-6"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          表紙に戻る
+        </motion.button>
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -63,6 +80,38 @@ export default function TableOfContents({
             transition={{ duration: 0.8, delay: 0.2 }}
           />
         </motion.div>
+
+        {/* Season intro entry */}
+        <motion.button
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          whileHover={{ x: 8 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={onIntroOpen}
+          className="w-full text-left mb-6 rounded-2xl border-2 border-amber-400 overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+        >
+          <div className="bg-gradient-to-r from-amber-700 to-orange-600 px-5 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🌍</span>
+              <div>
+                <p className="text-amber-200 text-xs font-bold uppercase tracking-widest">Season 1</p>
+                <p className="text-white font-black text-base" style={{ fontFamily: 'Georgia, serif' }}>
+                  Global Adventure
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-amber-200 text-xs font-semibold">
+              <span>なぜ20クエスト？</span>
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="bg-amber-50 px-5 py-2.5 flex items-center gap-2">
+            <span className="text-xs text-amber-700 leading-relaxed">
+              OECD・SDGs・National Trust の3指針をもとに設計 — 選定の思想を読む
+            </span>
+          </div>
+        </motion.button>
 
         <div className="space-y-3 mb-8">
           {quests.map((quest, index) => {
