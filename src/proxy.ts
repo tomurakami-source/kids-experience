@@ -34,7 +34,8 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isLoginPage = pathname.startsWith('/login');
   const isAuthCallback = pathname.startsWith('/api/auth');
-  const isPublic = isLoginPage || isAuthCallback;
+  const isTopPage = pathname === '/';
+  const isPublic = isLoginPage || isAuthCallback || isTopPage;
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();

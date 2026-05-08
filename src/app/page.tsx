@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AdventureBook from '@/components/AdventureBook';
 import ProfileSelector, { type Profile } from '@/components/ProfileSelector';
 import WelcomeScreen from '@/components/WelcomeScreen';
@@ -16,13 +17,22 @@ const SUPABASE_CONFIGURED =
   Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 export default function Home() {
-  const [view, setView] = useState<'welcome' | 'profiles' | 'book'>(
-    SUPABASE_CONFIGURED ? 'welcome' : 'book',
-  );
+  const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // null = 確認中
+  const [view, setView] = useState<'profiles' | 'book'>('profiles');
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(
     SUPABASE_CONFIGURED ? null : LOCAL_PROFILE,
   );
   const [quests, setQuests] = useState<Quest[]>([]);
+
+  // ログイン状態を確認
+  useEffect(() => {
+    if (!SUPABASE_CONFIGURED) { setIsLoggedIn(false); return; }
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsLoggedIn(!!user);
+    });
+  }, []);
 
   useEffect(() => {
     if (!SUPABASE_CONFIGURED) return;
@@ -46,10 +56,15 @@ export default function Home() {
       });
   }, []);
 
-  if (view === 'welcome') {
-    return <WelcomeScreen onStart={() => setView('profiles')} />;
+  // ログイン確認中はなにも表示しない
+  if (isLoggedIn === null) return null;
+
+  // 未ログイン → ウェルカム画面
+  if (!isLoggedIn) {
+    return <WelcomeScreen onStart={() => router.push('/login')} />;
   }
 
+  // ログイン済み → プロフィール選択
   if (view === 'profiles' || !selectedProfile) {
     return (
       <ProfileSelector

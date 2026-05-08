@@ -132,7 +132,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 1 }}
             style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)' }}
           />
-          <span className="relative z-10">冒険を始める ✨</span>
+          <span className="relative z-10">無料で冒険を始める ✨</span>
         </motion.button>
 
         <motion.p
