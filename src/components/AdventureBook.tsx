@@ -105,10 +105,10 @@ export default function AdventureBook({ quests, profile, onBackToProfiles }: Adv
     }
   }, [profile.id]);
 
-  const selectedQuestIndex = selectedQuestId ? quests.findIndex((q) => q.id === selectedQuestId) : -1;
+  const selectedQuestIndex = selectedQuestId !== null ? quests.findIndex((q) => q.id === selectedQuestId) : -1;
   const selectedQuest = selectedQuestIndex >= 0 ? quests[selectedQuestIndex] : null;
-  const isQuestCompleted = selectedQuestId ? completedIds.has(selectedQuestId) : false;
-  const selectedQuestData = selectedQuestId ? completedData.get(selectedQuestId) : undefined;
+  const isQuestCompleted = selectedQuestId !== null ? completedIds.has(selectedQuestId) : false;
+  const selectedQuestData = selectedQuestId !== null ? completedData.get(selectedQuestId) : undefined;
 
   const handlePrevQuest = useCallback(() => {
     if (selectedQuestIndex > 0) setSelectedQuestId(quests[selectedQuestIndex - 1].id);
