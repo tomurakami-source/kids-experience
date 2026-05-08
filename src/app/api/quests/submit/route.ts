@@ -161,6 +161,9 @@ ${quest.photo_criteria}
     const rawText =
       response.content[0].type === 'text' ? response.content[0].text.trim() : '';
 
+    console.log('[submit] imageDataLen:', imageData.length, 'mediaType:', mediaType);
+    console.log('[submit] Claude rawText:', rawText);
+
     let result: JudgeResult = {
       success: false,
       feedback: 'うまく判定できなかった…もう一度やってみよう！',
