@@ -195,11 +195,14 @@ ${quest.photo_criteria}
         const { error: uploadError } = await supabase.storage
           .from('quest-photos')
           .upload(storagePath, blob, { upsert: true, contentType: mediaType });
-        if (!uploadError) {
+        if (uploadError) {
+          console.error('[storage upload error]', JSON.stringify(uploadError));
+        } else {
           const { data: urlData } = supabase.storage.from('quest-photos').getPublicUrl(storagePath);
           photoUrl = urlData.publicUrl;
+          console.log('[storage upload ok] photoUrl:', photoUrl);
         }
-      } catch { /* storage failure is non-fatal */ }
+      } catch (e) { console.error('[storage upload exception]', e); }
 
       const { error: upsertError } = await supabase
         .from('quest_logs')
