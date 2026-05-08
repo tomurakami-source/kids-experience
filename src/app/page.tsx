@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import AdventureBook from '@/components/AdventureBook';
 import ProfileSelector, { type Profile } from '@/components/ProfileSelector';
+import WelcomeScreen from '@/components/WelcomeScreen';
 import { Quest } from '@/components/questUtils';
 import { createClient } from '@/lib/supabase/client';
 
@@ -15,6 +16,9 @@ const SUPABASE_CONFIGURED =
   Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 export default function Home() {
+  const [view, setView] = useState<'welcome' | 'profiles' | 'book'>(
+    SUPABASE_CONFIGURED ? 'welcome' : 'book',
+  );
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(
     SUPABASE_CONFIGURED ? null : LOCAL_PROFILE,
   );
@@ -42,15 +46,26 @@ export default function Home() {
       });
   }, []);
 
-  if (!selectedProfile) {
-    return <ProfileSelector onSelect={setSelectedProfile} />;
+  if (view === 'welcome') {
+    return <WelcomeScreen onStart={() => setView('profiles')} />;
+  }
+
+  if (view === 'profiles' || !selectedProfile) {
+    return (
+      <ProfileSelector
+        onSelect={(profile) => {
+          setSelectedProfile(profile);
+          setView('book');
+        }}
+      />
+    );
   }
 
   return (
     <AdventureBook
       quests={quests}
       profile={selectedProfile}
-      onBackToProfiles={SUPABASE_CONFIGURED ? () => setSelectedProfile(null) : () => {}}
+      onBackToProfiles={SUPABASE_CONFIGURED ? () => { setSelectedProfile(null); setView('profiles'); } : () => {}}
     />
   );
 }
