@@ -29,7 +29,7 @@ export default function Home() {
       .order('id')
       .then(({ data }) => {
         if (!data) return;
-        const mapped = data.map((r) => ({
+        setQuests(data.map((r) => ({
           id: r.id,
           title: r.title,
           category: r.category,
@@ -38,11 +38,7 @@ export default function Home() {
           parent_guide: (r.criteria as Record<string, string>)?.parent_guide ?? '',
           photo_criteria: (r.criteria as Record<string, string>)?.photo_criteria ?? '',
           growth_point: (r.criteria as Record<string, string>)?.growth_point ?? '',
-        }));
-        // チュートリアル（category='チュートリアル'）を先頭に表示
-        const tutorials = mapped.filter((q) => q.category === 'チュートリアル');
-        const others = mapped.filter((q) => q.category !== 'チュートリアル');
-        setQuests([...tutorials, ...others]);
+        })));
       });
   }, []);
 
