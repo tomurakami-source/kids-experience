@@ -91,8 +91,7 @@ export default function AdventureBook({ quests, profile, onBackToProfiles }: Adv
     setCurrentView('toc');
   }, []);
 
-  const handleQuestComplete = useCallback((questId: number, photoUrl?: string | null, aiComment?: string | null) => {
-    console.log('[AdventureBook] handleQuestComplete questId:', questId, 'photoUrl:', photoUrl, 'aiComment:', aiComment);
+  const handleQuestComplete = useCallback(async (questId: number, photoUrl?: string | null, aiComment?: string | null) => {
     setCompletedIds((prev) => {
       const next = new Set(prev).add(questId);
       if (!SUPABASE_CONFIGURED || profile.id === 'local') {
@@ -100,11 +99,30 @@ export default function AdventureBook({ quests, profile, onBackToProfiles }: Adv
       }
       return next;
     });
-    if (photoUrl !== undefined || aiComment !== undefined) {
-      console.log('[AdventureBook] setCompletedData for questId:', questId, 'photoUrl:', photoUrl);
-      setCompletedData((prev) => new Map(prev).set(questId, { photoUrl: photoUrl ?? null, aiComment: aiComment ?? null }));
+
+    // APIから photoUrl が来た場合はそのまま使う
+    if (photoUrl) {
+      setCompletedData((prev) => new Map(prev).set(questId, { photoUrl, aiComment: aiComment ?? null }));
+      return;
     }
-  }, [profile.id]);
+
+    // photoUrl が null の場合（クライアント切断等）はDBから再取得
+    if (SUPABASE_CONFIGURED && profile.id !== 'local') {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('quest_logs')
+        .select('photo_url, ai_comment')
+        .eq('profile_id', profile.id)
+        .eq('quest_id', questId)
+        .single();
+      if (data) {
+        setCompletedData((prev) => new Map(prev).set(questId, {
+          photoUrl: data.photo_url ?? null,
+          aiComment: data.ai_comment ?? aiComment ?? null,
+        }));
+      }
+    }
+  }, [profile.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectedQuestIndex = selectedQuestId !== null ? quests.findIndex((q) => q.id === selectedQuestId) : -1;
   const selectedQuest = selectedQuestIndex >= 0 ? quests[selectedQuestIndex] : null;
