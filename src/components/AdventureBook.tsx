@@ -92,15 +92,16 @@ export default function AdventureBook({ quests, profile, onBackToProfiles }: Adv
   }, []);
 
   const handleQuestComplete = useCallback((questId: number, photoUrl?: string | null, aiComment?: string | null) => {
+    console.log('[AdventureBook] handleQuestComplete questId:', questId, 'photoUrl:', photoUrl, 'aiComment:', aiComment);
     setCompletedIds((prev) => {
       const next = new Set(prev).add(questId);
-      // Persist locally when Supabase is not configured
       if (!SUPABASE_CONFIGURED || profile.id === 'local') {
         try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify([...next])); } catch { /* ignore */ }
       }
       return next;
     });
     if (photoUrl !== undefined || aiComment !== undefined) {
+      console.log('[AdventureBook] setCompletedData for questId:', questId, 'photoUrl:', photoUrl);
       setCompletedData((prev) => new Map(prev).set(questId, { photoUrl: photoUrl ?? null, aiComment: aiComment ?? null }));
     }
   }, [profile.id]);

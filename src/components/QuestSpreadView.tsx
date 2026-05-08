@@ -165,6 +165,7 @@ export default function QuestSpreadView({
         body: JSON.stringify({ questId: quest.id, imageData: data, mediaType, profileId }),
       });
       const json = await res.json() as JudgeResult & { alreadyCompleted?: boolean; photoUrl?: string | null };
+      console.log('[QuestSpread] API response:', JSON.stringify({ success: json.success, photoUrl: json.photoUrl, feedback: json.feedback }));
 
       setJudgeResult({ success: json.success, feedback: json.feedback, photoUrl: json.photoUrl });
       if (json.success) {
@@ -172,6 +173,7 @@ export default function QuestSpreadView({
         setShowCelebration(true);
         playSound('/sounds/success.wav');
         triggerVibration();
+        console.log('[QuestSpread] calling onQuestComplete with photoUrl:', json.photoUrl);
         onQuestComplete(quest.id, json.photoUrl ?? null, json.feedback ?? null);
       } else {
         setPhase('failure');

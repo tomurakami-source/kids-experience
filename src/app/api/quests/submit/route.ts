@@ -217,9 +217,16 @@ ${quest.photo_criteria}
           },
           { onConflict: 'profile_id,quest_id' },
         );
-      if (upsertError) console.error('[quest_logs upsert]', upsertError);
+      if (upsertError) {
+        console.error('[quest_logs upsert error]', JSON.stringify(upsertError));
+      } else {
+        console.log('[quest_logs upsert ok] photoUrl stored:', photoUrl);
+      }
+    } else {
+      console.log('[persist skipped] result.success:', result.success, 'supabase:', supabase ? 'set' : 'null');
     }
 
+    console.log('[final response] success:', result.success, 'photoUrl:', photoUrl);
     return Response.json({ ...result, photoUrl });
 
   } catch (err) {
