@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     // Claude Vision judgment
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-    const judgePrompt = `あなたは子供の冒険を応援する判定員です。この画像が、以下の「証明写真の条件」を満たしているか判定してください。
+    const judgePrompt = `あなたは子供の冒険を全力で応援する優しい判定員です。この画像が以下の「証明写真の条件」をおおむね満たしているか判定してください。
 
 【クエスト名】
 ${quest.title}
@@ -127,11 +127,12 @@ ${quest.title}
 ${quest.photo_criteria}
 
 【判定のルール】
-- 条件を明らかに満たしている場合は success: true
-- 子供が一生懸命挑戦した様子が伝わるなら、少し不完全でも success: true でOK
-- 画像が全く関係ない内容の場合は success: false
-- feedback は5〜12歳の子供向けに、日本語で励ますように書く（成功なら褒める、失敗なら優しく次への期待を込める）
-- feedbackは50文字以内にする
+- 条件に少しでも関係する内容が写っていれば success: true にする
+- 挑戦した様子が伝わればOK。完璧でなくてもよい
+- 撮影者が大人でも子供でも関係なく条件だけで判定する
+- 画像が条件と全く無関係な場合のみ success: false
+- 迷ったら success: true にする（応援する気持ちを優先）
+- feedback は日本語で50文字以内。成功なら思いきり褒める。失敗なら優しく次への期待を込める
 
 必ずこのJSON形式だけで返してください（説明文は不要）:
 {"success": true, "feedback": "メッセージ"}`;
