@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, Leaf, Globe, Coins, Flame, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Star, Leaf, Globe, Coins, Flame, Cpu, ChevronRight, ChevronLeft, Clock } from 'lucide-react';
 import { Quest, getConfig, getDifficultyStars } from './questUtils';
 import type { LucideProps } from 'lucide-react';
 
@@ -15,6 +15,7 @@ const CATEGORY_ICONS: Record<string, IconComponent> = {
   '社会・多様性': Globe,
   '自立・経済': Coins,
   '精神・レジリエンス': Flame,
+  'デジタルリテラシー': Cpu,
 };
 
 interface TableOfContentsProps {
@@ -196,9 +197,17 @@ export default function TableOfContents({
                       <h3 className="font-bold text-gray-900 text-sm truncate">
                         {quest.title}
                       </h3>
-                      <p className={`text-xs ${cfg.badgeText} font-semibold`}>
-                        {quest.category}
-                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className={`text-xs ${cfg.badgeText} font-semibold`}>
+                          {quest.category}
+                        </p>
+                        {quest.estimated_time && (
+                          <span className="flex items-center gap-0.5 text-xs text-gray-400 font-medium">
+                            <Clock className="w-3 h-3" />
+                            {quest.estimated_time}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 

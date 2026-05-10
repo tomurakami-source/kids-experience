@@ -1,0 +1,23 @@
+-- 全クエストに estimated_time を追加
+update public.quests set criteria = criteria || '{"estimated_time":"数分"}'::jsonb where id = 0;
+update public.quests set criteria = criteria || '{"estimated_time":"半日"}'::jsonb where id = 1;
+update public.quests set criteria = criteria || '{"estimated_time":"1〜3日"}'::jsonb where id = 2;
+update public.quests set criteria = criteria || '{"estimated_time":"1〜2ヶ月"}'::jsonb where id = 3;
+update public.quests set criteria = criteria || '{"estimated_time":"1〜3日"}'::jsonb where id = 4;
+update public.quests set criteria = criteria || '{"estimated_time":"1日"}'::jsonb where id = 5;
+update public.quests set criteria = criteria || '{"estimated_time":"半日"}'::jsonb where id = 6;
+update public.quests set criteria = criteria || '{"estimated_time":"2〜3時間"}'::jsonb where id = 7;
+update public.quests set criteria = criteria || '{"estimated_time":"3〜7日"}'::jsonb where id = 8;
+update public.quests set criteria = criteria || '{"estimated_time":"半日"}'::jsonb where id = 9;
+update public.quests set criteria = criteria || '{"estimated_time":"半日"}'::jsonb where id = 10;
+update public.quests set criteria = criteria || '{"estimated_time":"2〜7日"}'::jsonb where id = 11;
+update public.quests set criteria = criteria || '{"estimated_time":"半日"}'::jsonb where id = 12;
+update public.quests set criteria = criteria || '{"estimated_time":"1日"}'::jsonb where id = 13;
+update public.quests set criteria = criteria || '{"estimated_time":"3〜7日"}'::jsonb where id = 14;
+update public.quests set criteria = criteria || '{"estimated_time":"2〜7日"}'::jsonb where id = 15;
+update public.quests set criteria = criteria || '{"estimated_time":"1日"}'::jsonb where id = 16;
+update public.quests set criteria = criteria || '{"estimated_time":"3日以上"}'::jsonb where id = 17;
+update public.quests set criteria = criteria || '{"estimated_time":"1日"}'::jsonb where id = 18;
+update public.quests set criteria = criteria || '{"estimated_time":"半日"}'::jsonb where id = 19;
+update public.quests set criteria = criteria || '{"estimated_time":"2〜7日"}'::jsonb where id = 20;
+update public.quests set criteria = criteria || '{"estimated_time":"半日"}'::jsonb where id = 22;

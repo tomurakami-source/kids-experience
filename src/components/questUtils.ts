@@ -7,6 +7,7 @@ export interface Quest {
   parent_guide: string;
   photo_criteria: string;
   growth_point: string;
+  estimated_time?: string;
 }
 
 export interface CategoryConfig {
@@ -94,6 +95,20 @@ export const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
     sectionBg: 'bg-yellow-50',
     sectionBorder: 'border-yellow-200',
     sectionText: 'text-yellow-800',
+  },
+  'デジタルリテラシー': {
+    badge: 'bg-violet-100',
+    badgeText: 'text-violet-800',
+    stripe: 'from-violet-400 via-violet-500 to-purple-500',
+    cardFrom: 'from-violet-50/60',
+    iconBg: 'bg-violet-100',
+    iconColor: 'text-violet-600',
+    borderColor: 'border-violet-200',
+    glowShadow: 'shadow-violet-400/50',
+    ringColor: 'ring-violet-300',
+    sectionBg: 'bg-violet-50',
+    sectionBorder: 'border-violet-200',
+    sectionText: 'text-violet-800',
   },
 };
 

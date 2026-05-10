@@ -52,6 +52,7 @@ export default function Home() {
           parent_guide: (r.criteria as Record<string, string>)?.parent_guide ?? '',
           photo_criteria: (r.criteria as Record<string, string>)?.photo_criteria ?? '',
           growth_point: (r.criteria as Record<string, string>)?.growth_point ?? '',
+          estimated_time: (r.criteria as Record<string, string>)?.estimated_time,
         })));
       });
   }, []);
