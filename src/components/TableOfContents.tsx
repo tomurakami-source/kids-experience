@@ -1,9 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Star, Leaf, Globe, Coins, Flame, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Quest, getConfig, getDifficultyStars } from './questUtils';
 import type { LucideProps } from 'lucide-react';
+
+type Filter = 'all' | 'completed' | 'incomplete';
 
 type IconComponent = React.ComponentType<LucideProps>;
 
@@ -31,8 +34,15 @@ export default function TableOfContents({
   onIntroOpen,
   onBackToCover,
 }: TableOfContentsProps) {
+  const [filter, setFilter] = useState<Filter>('all');
   const completedCount = completedIds.size;
   const totalCount = quests.length;
+
+  const filteredQuests = quests.filter((q) => {
+    if (filter === 'completed') return completedIds.has(q.id);
+    if (filter === 'incomplete') return !completedIds.has(q.id);
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4 sm:p-8">
@@ -79,6 +89,27 @@ export default function TableOfContents({
             animate={{ scaleX: completedCount / totalCount }}
             transition={{ duration: 0.8, delay: 0.2 }}
           />
+
+          {/* Filter tabs */}
+          <div className="flex justify-center gap-2 mt-5">
+            {([
+              { key: 'all', label: 'すべて', count: totalCount },
+              { key: 'incomplete', label: '未達成', count: totalCount - completedCount },
+              { key: 'completed', label: '達成済み', count: completedCount },
+            ] as { key: Filter; label: string; count: number }[]).map(({ key, label, count }) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  filter === key
+                    ? 'bg-amber-700 text-white shadow-md'
+                    : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                }`}
+              >
+                {label} <span className="opacity-70">({count})</span>
+              </button>
+            ))}
+          </div>
         </motion.div>
 
         {/* Season intro entry */}
@@ -114,7 +145,12 @@ export default function TableOfContents({
         </motion.button>
 
         <div className="space-y-3 mb-8">
-          {quests.map((quest, index) => {
+          {filteredQuests.length === 0 && (
+            <p className="text-center text-amber-600/60 text-sm py-8 font-semibold">
+              {filter === 'completed' ? 'まだ達成したクエストがないよ！' : 'すべて達成済み！すごい！'}
+            </p>
+          )}
+          {filteredQuests.map((quest, index) => {
             const cfg = getConfig(quest.category);
             const Icon = CATEGORY_ICONS[quest.category] ?? Star;
             const isCompleted = completedIds.has(quest.id);
