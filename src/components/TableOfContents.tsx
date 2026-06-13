@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, Leaf, Globe, Coins, Flame, Cpu, ChevronRight, ChevronLeft, Clock } from 'lucide-react';
+import { Star, Leaf, Globe, Coins, Flame, Cpu, ChevronRight, ChevronLeft, Clock, Download } from 'lucide-react';
 import { Quest, getConfig, getDifficultyStars } from './questUtils';
+import { exportAlbum } from '@/lib/exportAlbum';
 import type { LucideProps } from 'lucide-react';
 
 type Filter = 'all' | 'completed' | 'incomplete';
@@ -18,10 +19,16 @@ const CATEGORY_ICONS: Record<string, IconComponent> = {
   'デジタルリテラシー': Cpu,
 };
 
+interface CompletedData {
+  photoUrl: string | null;
+  aiComment: string | null;
+}
+
 interface TableOfContentsProps {
   quests: Quest[];
   adventurerName: string;
   completedIds: Set<number>;
+  completedData: Map<number, CompletedData>;
   onQuestSelect: (questId: number) => void;
   onIntroOpen: () => void;
   onBackToCover: () => void;
@@ -31,11 +38,22 @@ export default function TableOfContents({
   quests,
   adventurerName,
   completedIds,
+  completedData,
   onQuestSelect,
   onIntroOpen,
   onBackToCover,
 }: TableOfContentsProps) {
   const [filter, setFilter] = useState<Filter>('all');
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await exportAlbum(adventurerName, quests, completedData);
+    } finally {
+      setExporting(false);
+    }
+  }
   const completedCount = completedIds.size;
   const totalCount = quests.length;
 
@@ -111,6 +129,18 @@ export default function TableOfContents({
               </button>
             ))}
           </div>
+          {/* Export button */}
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35 }}
+            onClick={handleExport}
+            disabled={exporting}
+            className="mt-4 flex items-center gap-2 mx-auto px-5 py-2 rounded-full text-xs font-bold border-2 border-amber-400 text-amber-700 hover:bg-amber-100 disabled:opacity-50 transition-all"
+          >
+            <Download className="w-3.5 h-3.5" />
+            {exporting ? 'エクスポート中…' : 'アルバムを保存する'}
+          </motion.button>
         </motion.div>
 
         {/* Season intro entry */}

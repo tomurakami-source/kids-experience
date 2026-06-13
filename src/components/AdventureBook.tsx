@@ -170,6 +170,7 @@ export default function AdventureBook({ quests, profile, onBackToProfiles }: Adv
               quests={quests}
               adventurerName={profile.name}
               completedIds={completedIds}
+              completedData={completedData}
               onQuestSelect={handleTocQuestSelect}
               onIntroOpen={handleIntroOpen}
               onBackToCover={onBackToProfiles}
