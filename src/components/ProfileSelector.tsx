@@ -15,15 +15,16 @@ export interface Profile {
 
 interface ProfileSelectorProps {
   onSelect: (profile: Profile) => void;
+  initialProfiles?: Profile[];
 }
 
 interface StarData {
   width: number; height: number; top: string; left: string; duration: number; delay: number;
 }
 
-export default function ProfileSelector({ onSelect }: ProfileSelectorProps) {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function ProfileSelector({ onSelect, initialProfiles }: ProfileSelectorProps) {
+  const [profiles, setProfiles] = useState<Profile[]>(initialProfiles ?? []);
+  const [loading, setLoading] = useState(!initialProfiles);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [creating, setCreating] = useState(false);
@@ -49,7 +50,10 @@ export default function ProfileSelector({ onSelect }: ProfileSelectorProps) {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchProfiles(); }, [fetchProfiles]);
+  useEffect(() => {
+    if (initialProfiles) return; // サーバーから取得済みの場合はスキップ
+    fetchProfiles();
+  }, [fetchProfiles, initialProfiles]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();

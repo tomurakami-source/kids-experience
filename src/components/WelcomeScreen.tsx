@@ -1,17 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 interface StarData {
   width: number; height: number; top: string; left: string; duration: number; delay: number;
 }
 
-interface WelcomeScreenProps {
-  onStart: () => void;
-}
-
-export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
+export default function WelcomeScreen() {
   const [stars, setStars] = useState<StarData[]>([]);
 
   useEffect(() => {
@@ -113,27 +110,31 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         </motion.div>
 
         {/* CTA Button */}
-        <motion.button
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.9 }}
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.97 }}
-          onClick={onStart}
-          className="w-full py-5 rounded-2xl font-black text-white text-lg shadow-2xl relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, #92400e 0%, #b45309 50%, #d97706 100%)',
-            boxShadow: '0 8px 32px rgba(180,83,9,0.5)',
-          }}
+          className="w-full"
         >
-          <motion.div
-            className="absolute inset-0 opacity-30"
-            animate={{ x: ['-100%', '100%'] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 1 }}
-            style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)' }}
-          />
-          <span className="relative z-10">無料で冒険を始める ✨</span>
-        </motion.button>
+          <Link
+            href="/login"
+            className="block w-full py-5 rounded-2xl font-black text-white text-lg shadow-2xl relative overflow-hidden text-center"
+            style={{
+              background: 'linear-gradient(135deg, #92400e 0%, #b45309 50%, #d97706 100%)',
+              boxShadow: '0 8px 32px rgba(180,83,9,0.5)',
+            }}
+          >
+            <motion.div
+              className="absolute inset-0 opacity-30"
+              animate={{ x: ['-100%', '100%'] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 1 }}
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)' }}
+            />
+            <span className="relative z-10">無料で冒険を始める ✨</span>
+          </Link>
+        </motion.div>
 
         <motion.p
           initial={{ opacity: 0 }}

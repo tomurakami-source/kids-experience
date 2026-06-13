@@ -21,7 +21,9 @@ export async function GET() {
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
   const profiles = (data ?? []).map(({ avatar_key, ...rest }) => ({ ...rest, avatar: avatar_key }));
-  return Response.json(profiles as Profile[]);
+  return Response.json(profiles as Profile[], {
+    headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' },
+  });
 }
 
 // POST /api/profiles — create a new profile
