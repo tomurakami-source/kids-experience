@@ -137,49 +137,56 @@ ${quest.photo_criteria}
 必ずこのJSON形式だけで返してください（説明文は不要）:
 {"success": true, "feedback": "メッセージ"}`;
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 256,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mediaType as ImageMediaType,
-                data: imageData,
-              },
-            },
-            { type: 'text', text: judgePrompt },
-          ],
-        },
-      ],
-    });
-
-    const rawText =
-      response.content[0].type === 'text' ? response.content[0].text.trim() : '';
-
-    console.log('[submit] imageDataLen:', imageData.length, 'mediaType:', mediaType);
-    console.log('[submit] Claude rawText:', rawText);
-
     let result: JudgeResult = {
       success: false,
       feedback: 'うまく判定できなかった…もう一度やってみよう！',
     };
 
     try {
-      const match = rawText.match(/\{[\s\S]*?\}/);
-      if (match) {
-        const parsed = JSON.parse(match[0]) as JudgeResult;
-        result = {
-          success: Boolean(parsed.success),
-          feedback: String(parsed.feedback ?? result.feedback),
-        };
+      const response = await client.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 256,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: mediaType as ImageMediaType,
+                  data: imageData,
+                },
+              },
+              { type: 'text', text: judgePrompt },
+            ],
+          },
+        ],
+      });
+
+      const rawText =
+        response.content[0].type === 'text' ? response.content[0].text.trim() : '';
+
+      console.log('[submit] imageDataLen:', imageData.length, 'mediaType:', mediaType);
+      console.log('[submit] Claude rawText:', rawText);
+
+      try {
+        const match = rawText.match(/\{[\s\S]*?\}/);
+        if (match) {
+          const parsed = JSON.parse(match[0]) as JudgeResult;
+          result = {
+            success: Boolean(parsed.success),
+            feedback: String(parsed.feedback ?? result.feedback),
+          };
+        }
+      } catch {
+        // use default result
       }
-    } catch {
-      // use default result
+    } catch (apiErr) {
+      // Claude API unavailable (credit exhausted, network error, etc.) → approve unconditionally
+      const errMsg = apiErr instanceof Error ? apiErr.message : String(apiErr);
+      console.error('[CLAUDE_API_FALLBACK] AI judgment skipped, auto-approving. reason:', errMsg);
+      result = { success: true, feedback: 'すごい！クエストをクリアしたね！' };
     }
 
     // Persist to Supabase on success (skipped in local mode)

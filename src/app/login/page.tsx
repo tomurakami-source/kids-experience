@@ -11,6 +11,7 @@ interface StarData {
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
   const [stars, setStars] = useState<StarData[]>([]);
   const supabase = createClient();
 
@@ -30,14 +31,26 @@ export default function LoginPage() {
     if (!email.trim()) return;
     setStatus('sending');
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: `${location.origin}/api/auth/callback`,
-      },
-    });
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          emailRedirectTo: `${location.origin}/api/auth/callback`,
+        },
+      });
 
-    setStatus(error ? 'error' : 'sent');
+      if (error) {
+        console.error('OTP error:', error);
+        setErrorMessage(error.message);
+        setStatus('error');
+      } else {
+        setStatus('sent');
+      }
+    } catch (err) {
+      console.error('OTP exception:', err);
+      setErrorMessage(err instanceof Error ? err.message : 'ネットワークエラー');
+      setStatus('error');
+    }
   }
 
   return (
@@ -142,9 +155,12 @@ export default function LoginPage() {
                   </div>
 
                   {status === 'error' && (
-                    <p className="text-xs text-rose-600 font-semibold text-center">
-                      送信に失敗しました。もう一度お試しください。
-                    </p>
+                    <div className="text-xs text-rose-600 font-semibold text-center space-y-1">
+                      <p>送信に失敗しました。もう一度お試しください。</p>
+                      {errorMessage && (
+                        <p className="text-rose-500 font-normal">{errorMessage}</p>
+                      )}
+                    </div>
                   )}
 
                   <motion.button
