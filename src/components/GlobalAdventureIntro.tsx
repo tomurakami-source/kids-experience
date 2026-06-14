@@ -257,6 +257,15 @@ export default function GlobalAdventureIntro({ onBack, onNext }: GlobalAdventure
                       「クエストは終わる。でも、冒険者は終わらない。」
                     </p>
                   </div>
+
+                  <a
+                    href="https://note.com/mstar_page/n/na112eb485eb4"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 text-xs text-amber-700/70 hover:text-amber-900 transition-colors underline underline-offset-2"
+                  >
+                    📝 開発者のnoteを読む
+                  </a>
                 </div>
 
                 {/* Next button */}
