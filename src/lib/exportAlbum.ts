@@ -1,4 +1,3 @@
-import JSZip from 'jszip';
 import { Quest, getDifficultyStars } from '@/components/questUtils';
 
 interface CompletedData {
@@ -24,11 +23,27 @@ const CATEGORY_COLOR: Record<string, string> = {
   'デジタルリテラシー': '#7c3aed',
 };
 
+async function toDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 function buildHtml(
   adventurerName: string,
   quests: Quest[],
   completedData: Map<number, CompletedData>,
-  photoFilenames: Map<number, string>,
+  photoDataUrls: Map<number, string>,
 ): string {
   const completedCount = completedData.size;
   const totalCount = quests.length;
@@ -39,19 +54,19 @@ function buildHtml(
   const questCards = quests.map((quest) => {
     const data = completedData.get(quest.id);
     const isCompleted = !!data;
-    const filename = photoFilenames.get(quest.id);
+    const dataUrl = photoDataUrls.get(quest.id);
     const stars = '★'.repeat(getDifficultyStars(quest.difficulty)) + '☆'.repeat(3 - getDifficultyStars(quest.difficulty));
     const color = CATEGORY_COLOR[quest.category] ?? '#92400e';
     const emoji = CATEGORY_EMOJI[quest.category] ?? '📖';
 
-    const photoSection = isCompleted && filename
+    const photoSection = isCompleted && dataUrl
       ? `<div class="photo-wrap">
-           <img src="photos/${filename}" alt="${quest.title}の達成写真" />
+           <img src="${dataUrl}" alt="${quest.title}の達成写真" />
            ${data?.aiComment ? `<div class="ai-comment">💬 ${data.aiComment}</div>` : ''}
          </div>`
       : `<div class="no-photo">
            <p class="no-photo-icon">🗺️</p>
-           <p class="no-photo-text">まだ挑戦中...</p>
+           <p class="no-photo-text">${isCompleted ? '写真なし' : 'まだ挑戦中...'}</p>
            <p class="quest-desc">${quest.description}</p>
          </div>`;
 
@@ -106,7 +121,6 @@ function buildHtml(
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    transition: transform 0.2s;
   }
   .quest-card.incomplete { opacity: 0.7; }
   .quest-header { padding: 16px 16px 12px; }
@@ -165,37 +179,23 @@ export async function exportAlbum(
   quests: Quest[],
   completedData: Map<number, CompletedData>,
 ): Promise<void> {
-  const zip = new JSZip();
-  const photosFolder = zip.folder('photos')!;
-  const photoFilenames = new Map<number, string>();
-
-  // Download photos in parallel
+  // Fetch all photos as base64 data URLs in parallel
+  const photoDataUrls = new Map<number, string>();
   await Promise.all(
     quests.map(async (quest) => {
-      const data = completedData.get(quest.id);
-      if (!data?.photoUrl) return;
-      try {
-        const res = await fetch(data.photoUrl);
-        if (!res.ok) return;
-        const blob = await res.blob();
-        const ext = blob.type.includes('png') ? 'png' : 'jpg';
-        const filename = `quest-${String(quest.id).padStart(2, '0')}.${ext}`;
-        photosFolder.file(filename, blob);
-        photoFilenames.set(quest.id, filename);
-      } catch {
-        // skip failed photo
-      }
+      const url = completedData.get(quest.id)?.photoUrl;
+      if (!url) return;
+      const dataUrl = await toDataUrl(url);
+      if (dataUrl) photoDataUrls.set(quest.id, dataUrl);
     }),
   );
 
-  const html = buildHtml(adventurerName, quests, completedData, photoFilenames);
-  zip.file('index.html', html);
-
-  const blob = await zip.generateAsync({ type: 'blob' });
+  const html = buildHtml(adventurerName, quests, completedData, photoDataUrls);
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${adventurerName}の冒険の書.zip`;
+  a.download = `${adventurerName}の冒険の書.html`;
   a.click();
   URL.revokeObjectURL(url);
 }
