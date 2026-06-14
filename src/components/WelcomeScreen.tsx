@@ -144,6 +144,18 @@ export default function WelcomeScreen() {
         >
           対象年齢：5〜12歳（保護者同伴推奨）
         </motion.p>
+
+        <motion.a
+          href="https://note.com/mstar_page/n/na112eb485eb4"
+          target="_blank"
+          rel="noopener noreferrer"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.3 }}
+          className="text-amber-400/50 text-xs underline underline-offset-2 hover:text-amber-400/80 transition-colors"
+        >
+          📝 このアプリについて（note）
+        </motion.a>
       </motion.div>
     </div>
   );
