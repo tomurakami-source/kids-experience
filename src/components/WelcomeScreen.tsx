@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import ConsentScreen, { hasConsented } from './ConsentScreen';
 
 interface StarData {
   width: number; height: number; top: string; left: string; duration: number; delay: number;
@@ -10,6 +11,8 @@ interface StarData {
 
 export default function WelcomeScreen() {
   const [stars, setStars] = useState<StarData[]>([]);
+  const [showConsent, setShowConsent] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setStars([...Array(30)].map(() => ({
@@ -21,6 +24,18 @@ export default function WelcomeScreen() {
       delay: Math.random() * 4,
     })));
   }, []);
+
+  function handleStart() {
+    if (hasConsented()) {
+      router.push('/login');
+    } else {
+      setShowConsent(true);
+    }
+  }
+
+  if (showConsent) {
+    return <ConsentScreen onConsent={() => router.push('/login')} />;
+  }
 
   return (
     <div
@@ -118,8 +133,8 @@ export default function WelcomeScreen() {
           whileTap={{ scale: 0.97 }}
           className="w-full"
         >
-          <Link
-            href="/login"
+          <button
+            onClick={handleStart}
             className="block w-full py-5 rounded-2xl font-black text-white text-lg shadow-2xl relative overflow-hidden text-center"
             style={{
               background: 'linear-gradient(135deg, #92400e 0%, #b45309 50%, #d97706 100%)',
@@ -133,7 +148,7 @@ export default function WelcomeScreen() {
               style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)' }}
             />
             <span className="relative z-10">無料で冒険を始める ✨</span>
-          </Link>
+          </button>
         </motion.div>
 
         <motion.p
